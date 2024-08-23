@@ -144,3 +144,29 @@ export default defineConfig({
 在展示区域，获取添加到展示区域的组件列表信息，循环渲染，即根据列表信息去createElement
 
 ![简易流程图](./lowcode简易流程图.png)
+
+### 鼠标悬浮高亮
+
+想要实现鼠标悬浮到某个已展示的组件上高亮提示，需要获取该组件的位置信息、宽高等信息，并且需要已展示区域(顶级元素)的位置信息。
+然后根据这些信息计算出高亮提示的位置。
+```js
+const position = {
+  left: container.left - parentContainer.left + parentContainer.scrollLeft,
+  top: container.top - parentContainer.top + parentContainer.scrollTop
+}
+```
+高亮提示的宽高和组件的宽高保持一致即可。
+
+最后根据`createPortal`创建一个高亮元素，挂载到已展示区域(顶级元素)的下面就实现了鼠标悬浮高亮的效果。
+
+> pointer-events: none；不响应鼠标事件
+> createPortal创建可指定挂载位置的元素
+
+### 点击选中可编辑
+
+高亮逻辑和上面是一样的，自定义label改成 编辑工具按钮 即可，比如删除按钮。
+
+### setting区域功能
+
+- 属性的展示、修改
+- 样式的展示、修改
