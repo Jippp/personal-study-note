@@ -1,5 +1,7 @@
 # 低代码编辑器
 
+详细的demo项目看[github仓库](https://github.com/Jippp/lowcode)
+
 ## 依赖
 
 - tailwindcss：方便css样式
@@ -197,5 +199,20 @@ const position = {
     const run = new Function('a', 'b', 'return a + b')
     run(1, 2)
   ```
+
+###  组件的联动
+
+组件和组件之间的联动，比如Button组件可以触发Modal组件。
+实现思路：
+  通过`forwardRef+useImmperativeHandle`暴露出组件内部方法，然后提供一个事件配置，最后在预览时获取所有的组件ref，通过配置的事件来触发组件ref上的方法。
+这里有个坑：ref的挂载是在更新提交阶段的，但是我们处理事件的方法上是在渲染阶段执行的，会导致处理事件时拿不到ref。这里的处理方式是render两遍，第一遍带上ref目的是拿到ref(为了没有ref时一遍就可以完成render)；第二遍目的是为了处理事件，注意不能带上ref(否则会导致无限render)。
+
+### 渲染后组件的拖拽
+
+这个只需要在物料组件中添加`useDrag`就可以了，注意区分移动和新建就好
+
+### 复杂物料组件的搭建
+
+比如table组件，可以将框架和columnItem组件分开，在table组件的框架中通过`React.Children.map`来将子组件渲染成需要的配置即可。然后在Table主框架组件中定义一些配置项、在ColumnItem组件中也定义一些配置项就好。
 
 
