@@ -5,6 +5,7 @@ export default defineConfig({
   title: "Personal Study Note",
   description: "Just for myself",
   lastUpdated: true,
+  head: [['link', { rel: 'icon', href: '/favicon.png' }]],
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
