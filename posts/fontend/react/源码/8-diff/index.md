@@ -11,7 +11,7 @@ description: React diff算法原理
 
 ---
 
-[具体实现代码](https://github.com/Jippp/personal-study-note/posts/fontend/react/源码/8-diff/diff.js)
+[具体实现代码](https://github.com/Jippp/personal-study-note/blob/master/posts/fontend/react/%E6%BA%90%E7%A0%81/8-diff/diff-all.js)
 
 React中对diff算法做了几个限制，防止时间复杂度过高：
 
