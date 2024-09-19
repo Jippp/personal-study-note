@@ -28,9 +28,19 @@ export default defineConfig({
       label: '文章摘要',
       level: [2,6],
     },
-    socialLinks: [{ icon: 'github', link: 'https://github.com/Jippp/personal-study-note' }]
+    socialLinks: [{ icon: 'github', link: 'https://github.com/Jippp/personal-study-note' }],
+    lastUpdated: {
+      text: '上一次更新',
+      formatOptions: {
+        dateStyle: 'full',
+        timeStyle: 'medium'
+      }
+    }
   } as any,
   srcExclude: ['readme.md', 'Readme.md', 'README.md'],
+  head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
+
+  lastUpdated: true,
 
   vite: {
     //build: { minify: false }
