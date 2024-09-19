@@ -11,11 +11,11 @@ description: 从源码分析ReactHooks原理
 
 # React Hooks原理
 
-### 背景介绍
+## 背景介绍
 
 如果没有Hooks，在函数式组件中，只能接受Props、渲染UI、触发事件等。状态无法保存、逻辑也无法复用。所以Hooks的作用就是复用逻辑和保存状态。
 
-### 流程
+## 流程
 
 ![image-hooks流程](./image-hooks流程.png)
 
@@ -61,7 +61,7 @@ function renderWithHooks(
 - 初始化`HooksDispatcherOnMount`
 - 更新`HooksDispatcherOnUpdate`
 
-#### 初始化
+### 初始化
 
 在初始化时将`ReactCurrentDispatcher.current`全局变量赋值为`HooksDispatcherOnMount对象`。
 
@@ -115,7 +115,7 @@ function mountWorkInProgressHook(): Hook {
 - 将hooks信息存到`fiber.memoizedState`上，通过`next`形成**单向链表**
 - **通过`hook.memoizedState`来存储不同hook需要的信息**，比如`useRef`，存的就是`{current: initialState}` 
 
-#### 更新
+### 更新
 
 函数式组件重渲染的时候，会将`ReactCurrentDispatcher.current`赋值为`HooksDispatcherOnUpdate`，和初始化一样的逻辑，会从该对象上取出对应的hook来执行。
 
@@ -186,11 +186,11 @@ function updateWorkInProgressHook(): Hook {
 
 **具体hooks的初始化\更新逻辑会根据hooks类型进行区分处理**
 
-### 状态派发
+## 状态派发
 
 通过`useState\useReducer`来实现函数式组件的状态
 
-#### 初始化
+### 初始化
 
 会从`HooksDispatcherOnMount`中取出对应的hook执行：
 
@@ -310,7 +310,7 @@ export default () => {
 
 最后将`更新函数dispatch`放到`queue.dispatch`上。
 
-#### 更新
+### 更新
 
 函数组件重新渲染时，会从`HooksDispatcherOnUpdate`上取出对应hook来执行，如`updateState`，会进入[`updateWorkInProgressHook`](#更新)函数，处理hook，然后调用`updateReducerImpl`。更新时`useState、useReducer`逻辑是一样的：
 
@@ -329,11 +329,11 @@ function updateReducerImpl(hook, current, reducer) {
 
 - 把待更新的`pending`合并到`baseQueue`，然后循环更新。
 
-### useEffect 副作用
+## useEffect 副作用
 
 在render阶段，并没有操作DOM元素，而是将这些操作转成`effectTag`，等到`commit阶段`再同意处理这些副作用，这里的副作用包括`useEffect\useLayoutEffect`。
 
-#### 初始化
+### 初始化
 
 ```js
 function mountEffect() {
@@ -381,19 +381,19 @@ React.useEffect(()=>{
 
 ![image-effect环状链表](./image-effect环状链表.png)
 
-#### 更新
+### 更新
 
 更新的核心逻辑就是判断`deps`有没有变化，如果没有变化，更新副作用链表。如果变化了，在更新副作用链表的同时，还会添加副作用tag`currentlyRenderingFiber.effectTag = fiberEffectTag`。
 
 在`commit阶段`根据这`effectTag`来执行副作用。
 
-#### effectTag
+### effectTag
 
 React中会使用不同的`EffectTag`来标记副作用，`useEffect UpdateEffect|PassiveEffect`，`useLayoutEffect HookLayout`。
 
 然后在`commit阶段`根据不同的标识符来处理`useEffect\useLayoutEffect`的副作用。
 
-### useRef 状态获取
+## useRef 状态获取
 
 这就比较简单了，首先初始化时：
 
@@ -416,7 +416,7 @@ function updateRef() {
 
 就是将ref数据挂到`hook.memoizedState`上，更新的时候返回最新的就可以。
 
-### useMemo 缓存数据
+## useMemo 缓存数据
 
 初始化时：
 
@@ -451,7 +451,7 @@ function updateMemo(nextCreate,deps) {
 
 可以看到在组件更新时，会判断依赖是否发生了变化，没有变化直接返回上一次的缓存值。如果没有依赖或者是依赖变化了，会重新执行`useMemo`接受的函数生成一个新的值返回出去。
 
-### 总结
+## 总结
 
 reactHooks的核心原理就是闭包，将需要的信息放到`fiber.memoizedState`上保存，每次组件重新渲染，都会从旧的fiber节点中取出上一次的hooks信息重新创建。不同的hook实现的原理不同。
 

@@ -25,7 +25,8 @@ export default defineConfig({
     },
     //outline:[2,3],
     outline: {
-      label: '文章摘要'
+      label: '文章摘要',
+      level: [2,6],
     },
     socialLinks: [{ icon: 'github', link: 'https://github.com/Jippp/personal-study-note' }]
   } as any,
