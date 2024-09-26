@@ -96,11 +96,15 @@ pnpm i next@latest react@latest react-dom@latest
 - `start`：查看打包后的文件
 - `lint`：执行lint
 
-## 路由介绍
+## 路由介绍(App Router)
 
-从一开始`page route`到现在的`app route`。在`next`中路由并没有单独的配置文件，而是通过文件路径来配置路由的，另外也可以通过文件来处理常见的页面状态。
+从一开始`page router`到现在的`app router`。在`next`中路由并没有单独的配置文件，而是通过文件路径来配置路由的，另外也可以通过文件来处理常见的页面状态。
 
-```md
+> [!NOTE]
+> 从 v13.4 之后，`App Router`成了默认的路由方案。
+> 当然，`Page Router`也是兼容的，`App Router`的优先级要高一些，并且如果两者路由一致，会有冲突，导致构建错误。
+
+```md{2}
 . src
 ├─ app
 │	├─ page.js
@@ -115,14 +119,17 @@ pnpm i next@latest react@latest react-dom@latest
 │	│	├─ template.js
 ```
 
-首先介绍一些这几个有着特殊名称的文件作用：
+首先介绍一下这几个有着特殊名称的文件作用：
 
-- `layout.xx`：布局作用，相当于一个**容器**，会自动将同级的`page.xx`作为`children`传入。顶级的`layout`是必须要有的，而且必须要有`html/body`标签。
+- `layout.xx`：布局作用，相当于一个**容器**，会自动将同级的`page.xx`作为`children`传入。**顶级的`layout`是必须要有的，而且必须要有`html以及body`标签**。
 - `page.xx`：页面主体，类比`index.xx`的作用，作为**页面的主体内容**。
 - `template.xx`：**和`layout.xx`相同的作用**，也会将同级`page.xx`作为`children`传入。但是路由切换时并**不会保留页面状态**，同时**顶级不是必须**的。
-- `loading.xx`：提供loading状态，配合`Suspense`实现的
+- `loading.xx`：提供loading状态，**配合`Suspense`实现的**，一般是`page.xx`中导出的是`async`函数，而不是普通的函数。
 - `error.xx`：提供错误状态，配合`ErrorBoundary`实现的，但是测试时好像开发环境还是会抛出错误。顶级的话是`global-error.xx`，报错会替换掉`layout`，所以顶级的error也需要有`html/body`
 - `not-found.xx`：404的页面，有一个默认的。
+
+> [!NOTE]
+> 如果文件夹内没有`page.xx`的话，该文件夹不作为路由，而是用来存放**其他文件**。
 
 如果全都有的话，编译之后就是：
 
@@ -132,8 +139,8 @@ export default () => {
     <Layout>
       <Template>
         <ErrorBoundary fallback={<Error />}>
-          <Suspense fallback={<Loading />}>
-            <ErrorBoundary fallback={<NotFound />}>
+          <Suspense fallback={<Loading />}>// [!code warning]
+            <ErrorBoundary fallback={<NotFound />}> // [!code warning]
               <Page />
             </ErrorBoundary>
           </Suspense>
@@ -146,18 +153,143 @@ export default () => {
 
 这里**路由的层级就是文件的层级**：访问`/`就是`src/app/page.js`；访问`/demo`就是`src/app/demo/page.js`；访问`/demo/about`就是`src/app/demo/about/page.js`；
 
-## 链接和导航
+### Layout的使用
 
-### 导航
+起到一个容器作用，需要注意如果在根目录的话，该文件是必须要有的，并且必须要要包含html、body标签。
+`page.xx`文件会作为`children`传入到该文件中。
+
+### Template的使用
+
+也是起到一个容器作用，但是路由切换时状态会重置，以下例子：
+
+`layout.xx`中有一些路由跳转的链接，跳转到子集路由，`template.xx`中有自己的状态，可以发现路由切换后，`template`的状态重置了，而`layout.xx`中的状态没有重置。**每次路由变化时，template都会重新创建**，所以一般用在某些**和路由切换相关联**的场景，比如切换路由时来执行一些上报记录之类的操作。
+
+```tsx
+// layout.tsx
+'use client'
+import Link from 'next/link'
+import { FC, PropsWithChildren, memo, useState } from 'react'
+
+const Layout: FC<PropsWithChildren> = ({ children }) => {
+  const [count, setCount] = useState(0)
+  return (
+    <div className='w-[200px] border-[1px] border-[#ccc] rounded-[4px]'>
+      <div>
+        <Link href='/about' className="w-[80px] h-[30px] p-[4px] border-[1px] border-[#ccc]">about</Link>
+        <br />
+        <Link href='/about/detail' className="w-[80px] h-[30px] p-[4px] border-[1px] border-[#ccc]">detail</Link>
+      </div>
+      {children}
+      <div>layout count: {count}</div>
+      <button className='border-[1px] border-[red] p-[4px]' onClick={() => setCount(d => d += 1)}>layout count + 1</button>
+    </div>
+  )
+}
+
+export default memo(Layout)
+```
+```tsx
+// template.tsx
+'use client'
+import { FC, PropsWithChildren, memo, useState } from 'react'
+
+const Template: FC<PropsWithChildren> = ({ children }) => {
+  const [count, setCount] = useState(0)
+  return (
+    <>
+      {children}
+      <div>tempalte count: {count}</div>
+      <button className='border-[1px] border-[red] p-[4px]' onClick={() => setCount(d => d += 1)}>template count + 1</button>
+    </>
+  )
+}
+
+export default memo(Template)
+```
+
+> 具体的代码看该[仓库](https://github.com/Jippp/personal-study-note)的`next/demo1`分支
+
+### 其他状态页面的使用
+
+这个状态页面包括`loading.xx`、`error.xx`、`not-found.xx`，这几个都是向上查找的，本级没有就用父级的。
+
+#### Loading的使用
+
+是使用`Suspence`组件包裹的，所以`page.xx`需要是异步函数，如下代码：
+```tsx{9}
+import { FC, memo } from 'react'
+
+const getData: () => Promise<string> = async() => {
+  return await new Promise((resolve) => setTimeout(() => {
+    resolve('ji')
+  }, 3000))
+}
+
+const User: FC = async () => {
+  const userName = await getData()
+  return (
+    <>
+      <h1>User page.</h1>
+      <div className=' font-bold'>userName: {userName}</div>
+    </>
+  )
+}
+
+export default memo(User)
+```
+当访问该路由时，就会从本路由中找`loading.xx`作为`Suspence`的`fallback`，如果没有就会用父级的`loading.xx`。
+
+#### Error的使用
+
+是使用`ErrorBoundary`组件包裹的，这里的是在`Layout以及Template`之下的，所以本级的`error.xx`是无法捕获到`layout.xx以及template.xx`中的错误，需要在父级路由的`error.xx`中捕获。
+
+> [!NOTE]
+> 这里个ErrorBoundary组件并不是React内置的，应该是Next内置的，具体源码没有看。
+
+所以还提供了一个`global-error.xx`文件，用来捕获根路由的`layou.xx以及template.xx`错误，这里作为`根layout`的fallback，所以也必须要有`html以及body`标签。
+
+#### NotFound的使用
+
+`not-found.xx`文件有一个默认的，触发时机如下：
+- 执行内置的`notFound`函数
+- 没有找到对应的路由
+
+所以开发时可以通过手动执行`notFound`函数来触发`not-found.xx`。如下代码：
+```tsx{1,12}
+import { notFound } from 'next/navigation'
+import { FC, memo } from 'react'
+
+const getData: () => Promise<string> = async() => {
+  return await new Promise((resolve) => setTimeout(() => {
+    resolve(Math.random() > 0.5 ? 'ji' : '')
+  }, 1000))
+}
+
+const User: FC = async () => {
+  const userName = await getData()
+  if(!userName) notFound()
+  return (
+    <>
+      <h1>User page.</h1>
+      <div className='font-bold'>userName: {userName}</div>
+      <div className='h-[30px] p-[4px] border-[1px] border-[#ccc] rounded-[6px]'>refresh userName</div>
+    </>
+  )
+}
+
+export default memo(User)
+```
+
+## 路由切换
 
 即`SPA`中的跳转到页面其他地方的链接，不会渲染整个页面，只加载需要的部分。`Next`中有4种方式来导航：
 
 1. 提供的`<Link>`组件
-2. 客户端中的`useRouter`hook
-3. 服务端中的`redirect`函数
+2. 客户端组件中的`useRouter`hook
+3. 服务端组件中的`redirect`函数
 4. 浏览器原生的`History API`
 
-#### Link组件
+### Link组件
 
 基本用法如下：
 
@@ -167,9 +299,9 @@ import Link from 'next/link'
 export default () => <Link href='/test'>跳转到test</Link>
 ```
 
-其中的`href`是支持动态的。
+其中的`href`是**支持动态**的。
 
-可以通过`usePathname`获取当前的pathname：
+还可以通过`usePathname`获取当前的pathname：
 
 ```jsx
 'use client'
@@ -196,11 +328,11 @@ export default () => {
 </Link>
 ```
 
-#### useRouter hook
+### useRouter hook
 
 客户端组件`use client`中使用
 
-```jsx
+```jsx{1}
 'use client'
 import { useRoute } from 'next/navigation'
 export default () => {
@@ -212,15 +344,17 @@ export default () => {
 }
 ```
 
-#### redirect函数
+### redirect函数
 
 服务端组件中使用
 
-#### 原生的History API
+### 原生的History API
 
 即`history.pushState/replaceState`
 
-## 动态路由Dynamic Route
+## 路由文件的写法
+
+### 动态路由Dynamic Route
 
 因为`next`中采用的是文件名称来进行路由配置的，动态路由需要使用`[xxx]`将文件名称包裹起来，包裹起来的部分会作为`params`参数传递给`layout.xx/page.xx`文件。
 
@@ -229,7 +363,7 @@ export default () => {
 >
 > 同级下多个动态路由，只会有一个生效，一般是先创建的那个。
 
-### [folderName]
+#### [folderName]
 
 这种写法只能访问下一级
 
@@ -247,7 +381,7 @@ app
 
 传入组件(对应的`page.js`文件内容)的`params.id`是字符串
 
-### [...folderName]
+#### [...folderName]
 
 访问多级路由
 
@@ -267,7 +401,7 @@ app
 
 此时组件中的`params.id`是字符串数组
 
-### [[...folderName]]
+#### [[...folderName]]
 
 会匹配所有的子级路由，**包括自己**。
 
@@ -283,7 +417,7 @@ app
 > [!IMPORTANT]
 > 特别注意这种写法，**不能有默认的page.js**，否则会404
 
-## 路由组Route Groups  `(folderName)`
+### 路由组Route Groups  `(folderName)`
 
 在`Next`中一般的文件名称都会被映射到URL中，可以通过`路由组`阻止这种行为。
 
@@ -317,7 +451,7 @@ app
 - 不要有相同的路径，比如`(group1)/about/page.js`和`(group2)/about/page.js`，会报错。
 - **跨`layout`的导航会导致页面重新加载**，上述文件中的`/about`跳转到`/detail`会让页面重新加载
 
-## 平行路由Parallel Route  `@folderName`
+### 平行路由Parallel Route  `@folderName`
 
 从名称中可以知道这个是用来干嘛的，即**同一个`layout`中渲染多个页面**的。
 
@@ -357,7 +491,7 @@ export default ({ children, fontend, backend }) => {
 
 平行路由让复杂页面拆分的更加简单了，将这些**平行路由当做`子模块`来理解**可能会更好。
 
-### default.js
+#### default.js
 
 平行路由虽然使用子路由使得复杂页面更加的方便拆分，但是也带来了一些问题。
 
@@ -404,7 +538,7 @@ export default ({ children, fontend, backend }) => {
 
 在`app/route`和`app/route/@backend`下新增了个`default.js`，这样直接通过URL访问`/route/show`时，就会渲染出对应的`default.js`内容。
 
-## 拦截路由Intercepting Route  `(.)`
+### 拦截路由Intercepting Route  `(.)`
 
 即通过`Link`跳转时，可以进行拦截，展示A页面。如果是直接通过URL来访问，则展示B页面。
 
@@ -415,7 +549,7 @@ export default ({ children, fontend, backend }) => {
 
 拦截路由可以让用户即预览了详情内容，又没有打断用户的浏览体验 留在了当前页面。
 
-### 使用
+#### 使用
 
 使用拦截路由时，需要文件夹以`(..)`开头：
 
@@ -443,7 +577,7 @@ export default ({ children, fontend, backend }) => {
 
 在`app/stop/page.js`中通过`Link`跳转到`/stop/photo`，会先进入`app/stop/@modal/(.)photo/page.js`页面，刷新之后才展示`app/stop/photo/page.js`
 
-## 路由总结
+### 路由写法总结
 
 上述有好几种路由的方式，这里总结一下：
 
