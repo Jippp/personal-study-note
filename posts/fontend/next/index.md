@@ -5,7 +5,7 @@ category: Next
 tags:
 - fontend
 - Next
-description: Next入门介绍
+description: Next入门介绍，从简单使用到路由文件写法
 ---
 
 # Next入门篇
