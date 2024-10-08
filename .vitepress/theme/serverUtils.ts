@@ -24,26 +24,38 @@ async function getPosts(pageSize: number) {
   return posts
 }
 
+const getTemplate = ({
+  currentPage, pageSize, pagesNum
+}: {
+  currentPage: number; pageSize: number; pagesNum: number
+}) => {
+  return `
+---
+page: true
+title: ${currentPage === 1 ? 'home' : 'page_' + currentPage}
+aside: false
+---
+<script setup>
+  import Page from "./.vitepress/theme/components/Page.vue";
+  import { useData } from "vitepress";
+  const { theme } = useData();
+  const posts = theme.value.posts.slice(${pageSize * (currentPage - 1)},${pageSize * currentPage})
+</script>
+<Page :posts="posts" :pageCurrent="${currentPage}" :pagesNum="${pagesNum}" />
+`.trim()
+}
+
 async function generatePaginationPages(total: number, pageSize: number) {
   //  pagesNum
   let pagesNum = total % pageSize === 0 ? total / pageSize : Math.floor(total / pageSize) + 1
   const paths = resolve('./')
   if (total > 0) {
     for (let i = 1; i < pagesNum + 1; i++) {
-      const page = `
----
-page: true
-title: ${i === 1 ? 'home' : 'page_' + i}
-aside: false
----
-<script setup>
-import Page from "./.vitepress/theme/components/Page.vue";
-import { useData } from "vitepress";
-const { theme } = useData();
-const posts = theme.value.posts.slice(${pageSize * (i - 1)},${pageSize * i})
-</script>
-<Page :posts="posts" :pageCurrent="${i}" :pagesNum="${pagesNum}" />
-`.trim()
+      const page = getTemplate({
+        currentPage: i,
+        pageSize,
+        pagesNum
+      })
       const file = paths + `/page_${i}.md`
       await fs.writeFile(file, page)
     }

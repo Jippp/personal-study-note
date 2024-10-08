@@ -25,7 +25,7 @@ function lazy<T extends ComponentType<any>>(
 
 但是`Suspense`能和其他数据加载的方式一起使用：
 
-```react
+```jsx
 import { Suspense } from 'react'
 
 let data = ''

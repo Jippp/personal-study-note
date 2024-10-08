@@ -4,6 +4,8 @@ import { getPosts } from './theme/serverUtils'
 //每页的文章数量
 const pageSize = 10
 
+const isProd = process.env.NODE_ENV === 'production'
+
 export default defineConfig({
   title: 'Blog',
   base: '/',
@@ -43,7 +45,8 @@ export default defineConfig({
   lastUpdated: true,
 
   vite: {
-    //build: { minify: false }
+    // 生产环境简化产物
+    build: { minify: isProd },
     server: { port: 5000 }
   }
 })
