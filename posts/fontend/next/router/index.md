@@ -32,10 +32,10 @@ description: Next入门介绍，如何书写服务端接口代码
 
 ```bash
 - app
-	- api
-		- route.js
-  - page.js
-  # 省略其他
+-- api
+--- route.js
+-- page.js
+# 省略其他
 ```
 
 ```js
@@ -147,10 +147,11 @@ export async function GET() {
 
 #### 如何退出缓存
 
-实际上默认缓存只是在打包时处理的，将这些静态的请求缓存下来。
-想要退出环境可以通过以下方法：
+实际上默认缓存只是在打包时处理的，将这些静态的请求缓存下来, 并且只有`GET请求`能缓存。
+<br />
+想要退出缓存可以通过以下方法：
 
-- 使用`request`对象
+- 代码中使用`request`对象
 - 使用其他`HTTP Mehtod`
 - 在代码中手动声明为动态渲染，即[路由配置项](https://nextjs.net.cn/docs/app/building-your-application/routing/route-handlers#segment-config-options)
   ```ts{2}
@@ -240,7 +241,7 @@ export function GET() {
 import { NextResponse } from 'next/server'
 
 // 中间件处理函数
-export function middleware() {
+export function middleware(request) {
   return NextResponse.redirect(new URL('/', request.url))
 }
 
@@ -254,9 +255,13 @@ export const config = {
 
 ### 匹配路径
 
+有两种方式来匹配路径：
+
 #### config.matcher配置项
 
-字符串或者数组，数组时就是匹配多个路径：
+通过`config.matcher`配置项来匹配路径。
+
+是一个字符串或者数组，数组时就是匹配多个路径：
 
 ```js
 export const config = {
@@ -268,5 +273,36 @@ export const config = {
 >
 > 作用就是将上面的路径字符串转为正则表达式。
 
-##### path-to-regexp的规范
+#### 条件语句
+
+上面的写法还是有一定门槛的，需要了解匹配规则才能写出来，对我来说和正则没什么区别，属于永远学不会的东西。
+所以可以通过条件语句来判断，在逻辑语句中进行特定的处理。
+
+```js
+import { NextResponse } from 'next/server'
+
+// 中间件处理函数
+export function middleware(request) {
+  if(request.nextUrl.pathname.startsWith('about')) {
+    // 具体逻辑
+    return NextResponse.rewrite(new URL('/about-2', request.url))
+  }
+  if(request.nextUrl.pathname.startsWith('xxx')) {
+    // 具体逻辑
+    return NextResponse.rewrite(new URL('/xxx', request.url))
+  }
+}
+```
+
+### 具体的中间件逻辑
+
+具体的逻辑和路由处理的写法差不多，都是借助`NextResponse\NextRequest`对象来完成的。
+
+> [!IMPORTANT]
+> 中间件middlare是在浏览器环境下运行的，不支持Node环境，所以如果使用了一些Node环境相关的API 是会报错的。
+
+### 执行顺序
+
+在Next程序中，很多地方都可以处理路由的响应，比如`next.config.js`、`中间件`、以及`路由处理程序`，所以一定要注意他们的执行顺序。
+很明显，是先从`next.config.js`开始执行，然后是`中间件`，最后是`路由处理程序`。
 
