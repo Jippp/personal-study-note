@@ -1,6 +1,6 @@
 ---
 date: 2024-09-27
-title: Next入门篇二
+title: Next入门篇二 路由处理程序
 category: Next
 tags:
 - fontend

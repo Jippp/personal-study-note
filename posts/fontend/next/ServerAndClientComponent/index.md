@@ -1,6 +1,6 @@
 ---
-date: 2024-10-10
-title: Next入门篇五
+date: 2024-10-12
+title: Next入门篇五 服务端组件和客户端组件
 category: Next
 
 tags:

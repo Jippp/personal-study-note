@@ -1,6 +1,6 @@
 ---
 date: 2024-10-10
-title: Next入门篇四
+title: Next入门篇四 RSC和SSR
 category: Next
 
 tags:

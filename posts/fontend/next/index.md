@@ -1,6 +1,6 @@
 ---
 date: 2024-09-25
-title: Next入门篇一
+title: Next入门篇一 简单使用和特殊文件写法
 category: Next
 tags:
 - fontend

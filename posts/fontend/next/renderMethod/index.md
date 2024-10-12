@@ -1,6 +1,6 @@
 ---
 date: 2024-10-08
-title: Next入门篇三
+title: Next入门篇三 常见渲染方式CSR SSR SSG ISR等
 category: Next
 
 tags:
