@@ -5,6 +5,7 @@ category: engineering
 tags:
 - fontend
 - engineering
+- PerformanceOptimization
 description: 旧项目迁移Rsbuild，体验一下构建工具的升级。
 ---
 
@@ -12,6 +13,13 @@ description: 旧项目迁移Rsbuild，体验一下构建工具的升级。
 
 公司的项目优化了构建工具，使用Rsbuild重构了，体验很好，快到怀疑人生。
 所以我用一个旧项目体验了一下这个过程。
+
+这个优化的主要是**开发时**的打包速度和开发效率，对构建产物并没有太大的影响。
+
+> [!NOTE]
+> 另外前端性能优化 另一个大的点就是**生产环境时的渲染速度**，体现在页面上就是足够的快和稳定。
+>
+> 关于性能优化，后面需要总结一些大致的体系TODO
 
 ## 使用
 
