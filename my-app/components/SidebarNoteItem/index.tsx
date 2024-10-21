@@ -1,8 +1,8 @@
-import dayjs from 'dayjs'
 import { NoteItem } from '@/components/interface'
 import SidebarNoteContent from '@/components/SidebarNoteContent'
+import SidebarNoteItemHeader from '@/components/SidebarNoteItemHeader'
 
-interface ItemProps {
+export interface ItemProps {
   noteId: string;
   note: NoteItem
 }
@@ -25,10 +25,7 @@ export default function SidebarNoteItem({
       }
     >
       {/* SidebarNoteContent客户端组件中使用服务端组件 */}
-      <header className="sidebar-note-header">
-        <strong>{title}</strong>
-        <small>{dayjs(updateTime).format('YYYY-MM-DD hh:mm:ss')}</small>
-      </header>
+      <SidebarNoteItemHeader title={title} updateTime={updateTime} />
     </SidebarNoteContent>
   )
 }

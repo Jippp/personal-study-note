@@ -1,9 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import NotePreview from '@/components/NotePreview'
-import { saveNote, deleteNote } from '@/app/action'
-import { useFormStatus } from 'react-dom'
+import SaveButton from '@/components/Buttons/SaveButton'
+import DeleteButton from '@/components/Buttons/DeleteButton'
+import { saveNote, deleteNote, StateProps } from '@/app/action'
+import { useFormState } from 'react-dom'
+
+const initialState: StateProps = {
+  message: null
+}
 
 interface NoteEditorProps {
   initialTitle: string
@@ -16,12 +22,19 @@ export default function NoteEditor({
   initialTitle,
   initialBody
 }: NoteEditorProps) {
-  // react 18的新hook，用于处理form表单的一些状态
-  const { pending } = useFormStatus()
+  const [saveState, saveFormAction] = useFormState(saveNote, initialState)
+  const [_, delFormAction] = useFormState(deleteNote, undefined)
   const [title, setTitle] = useState(initialTitle)
   const [body, setBody] = useState(initialBody)
   // 根据是否有id来判断是新建还是编辑
   const isDraft = !noteId
+
+  useEffect(() => {
+    if (saveState.errors) {
+      // 处理错误
+      alert(saveState.errors[0].message)
+    }
+  }, [saveState.errors])
 
   return (
     <div className="note-editor">
@@ -30,39 +43,13 @@ export default function NoteEditor({
         <div className="note-editor-menu" role="menubar">
           {/* 通过隐藏式Dom 给serverAction传递参数 */}
           <input type="hidden" name="noteId" value={noteId} />
-          <button
-            className="note-editor-done"
-            disabled={pending}
-            type="submit"
-            formAction={saveNote}
-            role="menuitem"
-          >
-            <img
-              src="/checkmark.svg"
-              width="14px"
-              height="10px"
-              alt=""
-              role="presentation"
-            />
-            Done
-          </button>
-          {!isDraft && (
-            <button
-              className="note-editor-delete"
-              disabled={pending}
-              formAction={deleteNote}
-              role="menuitem"
-            >
-              <img
-                src="/cross.svg"
-                width="10px"
-                height="10px"
-                alt=""
-                role="presentation"
-              />
-              Delete
-            </button>
-          )}
+          <SaveButton formAction={saveFormAction} />
+          <DeleteButton isDraft={isDraft} formAction={delFormAction} />
+        </div>
+
+        <div className="note-editor-menu">
+          { saveState?.message }
+          { saveState.errors && saveState.errors[0].message }
         </div>
 
         <label className="offscreen" htmlFor="note-title-input">
@@ -71,6 +58,7 @@ export default function NoteEditor({
         <input
           id="note-title-input"
           type="text"
+          name="title"
           value={title}
           onChange={(e) => {
             setTitle(e.target.value)
@@ -82,6 +70,7 @@ export default function NoteEditor({
         <textarea
           value={body}
           id="note-body-input"
+          name="body"
           onChange={(e) => setBody(e.target.value)}
         />
       </form>

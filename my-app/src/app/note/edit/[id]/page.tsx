@@ -1,6 +1,7 @@
 import NoteEditor from '@/components/NoteEditor'
 import {getNote} from '@/lib/redis';
 import { NoteItem } from '@/components/interface'
+import { sleep } from '@/lib/utils'
 
 export default async function EditPage({ params }: { params: { id: string } }) {
 
@@ -8,8 +9,7 @@ export default async function EditPage({ params }: { params: { id: string } }) {
   const note = await getNote(noteId)
 
   // 让效果更明显
-  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-  await sleep(3000);
+  await sleep(500);
 
   if (!note) {
     return (

@@ -20,7 +20,7 @@ Next.js v14 基于 React Server Component 构建的 App Router。该Demo是介�
 ### 文件结构
 
 #### components 组件
-  - SidebarNoteList中可以看到，使用了dayjs，但由于是服务端组件，所以dayjs这个包没有打包到前端，减少了产物体积。如果标识了`'use client'`，就会打包到前端来。具体可以在`Source面板 -> Page -> top目录 -> webpack0internal:// -> (app-pages-browser) -> node_modules/.pnpm`中看到
+  - SidebarNoteItem中可以看到，使用了dayjs，但由于是服务端组件，所以dayjs这个包没有打包到前端，减少了产物体积。如果标识了`'use client'`，就会打包到前端来。具体可以在`Source面板 -> Page -> top目录 -> webpack0internal:// -> (app-pages-browser) -> node_modules/.pnpm`中看到
   - SidebarNoteItem是一个服务端组件 SidebarNoteContent是一个客户端组件。在SidebarNoteItem这个服务端组件中直接使用SidebarNoteContent客户端组件。通过`children props`的形式将服务端组件的一部分传递给了客户端组件。
   > 为什么要通过children props的形式？
   > 客户端组件中是不能直接使用服务端组件的。但是可以通过props的形式使用服务端组件。
@@ -31,9 +31,21 @@ Next.js v14 基于 React Server Component 构建的 App Router。该Demo是介�
 
   > 因为服务端组件的一些好处，所以开发时要尽量使用服务端组件，拆无可拆时再使用客户端组件
 
-  > 关于Suspence的使用，包裹了SidebarNoteList组件，如果不使用Suspence包裹，直接通过URL访问的话，会等待组件加载完成之后再跳转过去；使用了Suspence会直接跳转，在当前页面显示fallback，在后台加载完成之后再显示组件。另外使用Suspence，可以和其他组件交互，不会因为当前组件在加载而有影响。
+  > 关于Suspence的使用，Sidebar中使用`Suspense`包裹了SidebarNoteList组件，如果不使用Suspence包裹，直接通过URL访问的话，会等待组件加载完成之后再跳转过去 会有一段空白；使用了Suspence会直接跳转，在当前页面显示fallback，在后台加载完成之后再显示组件。另外使用Suspence，可以和其他组件交互，不会因为当前组件在加载而有影响。
   >
-  > 在本例中，延长的实际是localhost的加载，并且对这这个html文件，网络是通过`Transform-Encoding: chunked`流式传输的，数据是分块发送的。先传的是带有fallback的HTML，然后等待加载完成之后再传渲染之后的HTML。
+  > 在本例中，延长的实际是localhost的加载，并且对这个html文件，网络是通过`Transform-Encoding: chunked`流式传输的，数据是分块发送的。先传的是带有fallback的HTML，然后等待加载完成之后再传渲染之后的HTML。
+
+##### SidebarSearchField 左侧的搜索组件
+
+- 使用了 useTransition hook，这也是react 18新增的，主要是用来控制优先级的。适用于频繁非紧急更新的场景
+- 通过 next/navigation 提供的useRouter usePathname 来处理路由相关的，所以将该组件改为了客户端组件。
+
+然后左侧展示的时候`SidebarNoteList组件`也需要用到`useSearchParams`，所以只能改为客户端组件，但是该该组件用到了`ioredis`相关的api，直接改会报错，所以需要将数据处理和筛选分开，抽出了一个`SidebarNoteListFilter`组件，这个组件中使用`useSearchParams`进行筛选处理。
+但是由于这个组件是客户端组件，所以引用的组件都变成了客户端组件，包括使用了`dayjs`的`SidebarNoteItemHeader`组件。为了减少包体积，在`SidebarNoteList`组件中，通过props的形式将`header`组件传给`SidebarNoteListFilter`组件，在`filter`组件中进行组装。
+> 还有一种简单的方式，就是在noteList组件中渲染好，通过children props的形式传给filter组件。filter组件中通过`Children.map`的形式从子组件中获取props进行筛选处理。但是这种方式react已经要放弃了，所以才用了上面的方式。
+
+> 本质上还是在服务端组件中进行渲染好，通过props传递给客户端组件，在客户端组件中进行组装。
+
 
 #### data 数据
 #### lib 公共库
@@ -48,7 +60,7 @@ Next.js v14 基于 React Server Component 构建的 App Router。该Demo是介�
 
   响应头中有这几个需要注意的：
     - `Cache-Control: no-store,must-revalidate`：缓存配置
-    - `Content-Type: text/x-component`：表示响应体是RSC Payload格式的
+    - `Content-Type: text/x-component`：表示响应体是RSC Payload格式的 chrome中看不到response, 可以在fire fox中看到
     - `Transform-Encoding: chunked`：流式传输
     - `Vary: RSC,Next-Router-State-Tree,Next-Router-Prefetch,Accept-Encoding`：经过的中间服务器
 
@@ -103,11 +115,12 @@ Next.js v14 基于 React Server Component 构建的 App Router。该Demo是介�
 
 - app/action.ts serverAction文件
 > serverAction？TODO 不知道是啥
+> 一句话描述就是在服务器端执行的函数
 
 访问构建后的资源，发现一些问题：
 初始化时有三条数据，然后加一条数据，然后在新建note/edit时，会发现左侧变回了三条。这是构建时有缓存，路由默认是静态渲染，构建的时候只有三条，所以即使新建了 再进入note/edit路由时还是只有三条数据。
 > 也就是`完整路由缓存`?TODO 
-> 客户端路由是静态渲染的，数据也是缓存的，所以成为完整路由缓存
+> 客户端路由是静态渲染的，数据也是缓存的，所以称为完整路由缓存
 
 如何禁止Next的这种行为？
 重新验证数据和重新部署。
@@ -116,7 +129,7 @@ Next.js v14 基于 React Server Component 构建的 App Router。该Demo是介�
 还有一种方式是`router.refresh`是路由缓存失效并发起一个重新获取当前路由的请求
 
 新建和删除时发生了什么？
-当点击新建按钮时，会将当前的数据通过POST请求发送到Next服务端，在服务端执行serverAction对应逻辑。相当于将逻辑放到了服务端执行，执行完了后将数据通过RSC Payload的形式返回到前端。
+当点击新建按钮时，会将当前页面的数据通过POST请求发送到Next服务端，在服务端执行serverAction对应逻辑。相当于将逻辑放到了服务端执行，执行完了后将数据通过RSC Payload的形式返回到前端。
 
 ServerActions的好处？
 可以实现渐进式增强，因为是在服务端执行的代码，所以即使浏览器禁用了JS，也不影响页面的运行。
@@ -125,7 +138,7 @@ ServerActions的好处？
 关于React提供的新hook，useFormState和useFormStatus。
 useFormState用于根据form action的结果来更新表单状态；useFormStatus用于提交表单时显示处理状态。
 > 因为这两个hook还在测试阶段，所以使用时最好以react官方文档为准
-
+这两个hook在 NoteEditor组件以及SaveButton\DeleteButton组件中有用到 注意SaveButton和DeleteButton中都通过useFormStatus拿到pending状态，是因为这两个button都在同一个form之下, 所以这个状态是一起变化的。
 
 
 

@@ -1,14 +1,13 @@
 
-import { NoteItem } from '@/components/interface'
-import SidebarNoteItem from '@/components/SidebarNoteItem'
 import { getAllNotes } from '@/lib/redis'
-
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+import { sleep } from '@/lib/utils'
+import SidebraNoteListFilter from './SidebraNoteListFilter'
+import SidebarNoteItemHeader from '@/components/SidebarNoteItemHeader'
 
 export default async function NoteList() {
 
   // 延长时间
-  await sleep(3000);
+  await sleep(1000);
 
   const notes = await getAllNotes()
 
@@ -23,14 +22,18 @@ export default async function NoteList() {
   }
 
   return (
-    <ul className="notes-list">
-      {arr.map(([noteId, note]) => {
-        return (
-          <li key={noteId}>
-            <SidebarNoteItem noteId={noteId} note={JSON.parse(note) as NoteItem} />
-          </li>
-        )
-      })}
-    </ul>
+    <SidebraNoteListFilter
+      notes = {
+        Object.entries(notes).map(([noteId, note]) => {
+          const noteData = JSON.parse(note)
+          return {
+            noteId,
+            note: noteData,
+            // 通过props传递，该组件被视为服务端组件
+            header: <SidebarNoteItemHeader title={noteData.title} updateTime={noteData.updateTime} />
+          }
+        })
+      } 
+    />
   )
 }
