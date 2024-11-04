@@ -133,6 +133,13 @@ checksum addr = 0x29717 BF 51 D 8 AF c A 452459936d395668A576 B ce66
 
 `Gas Price`是全网用户**竞价产生**的，它**时刻在波动**。如果交易少，`Gas Price`将下降，如果交易多，网络拥堵，则`Gas Price`将上升。以太坊的Gas价格可以在[Etherscan](https://etherscan.io/gastracker)跟踪。
 
+> [!NOTE]
+> ERP1559之后交易费用Gas Fees由 gasPrice * gasLimit 改为了Base + Max + Max Priority三个部分。
+> 
+> Base 每次交易需要付出的，会烧掉，任何人都不会持有
+> Max 交易需要给矿工节点的
+> Max Priority 单独给矿工节点的，希望来加快交易速度
+
 ### 交易回执
 
 以太坊区块为每一笔交易都会**产生一笔回执（Recipt）**，**表示交易的最终状态**。一个回执信息主要包括：
