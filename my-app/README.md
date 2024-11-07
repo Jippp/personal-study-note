@@ -42,10 +42,18 @@ Next.js v14 基于 React Server Component 构建的 App Router。该Demo是介�
 
 然后左侧展示的时候`SidebarNoteList组件`也需要用到`useSearchParams`，所以只能改为客户端组件，但是该该组件用到了`ioredis`相关的api，直接改会报错，所以需要将数据处理和筛选分开，抽出了一个`SidebarNoteListFilter`组件，这个组件中使用`useSearchParams`进行筛选处理。
 但是由于这个组件是客户端组件，所以引用的组件都变成了客户端组件，包括使用了`dayjs`的`SidebarNoteItemHeader`组件。为了减少包体积，在`SidebarNoteList`组件中，通过props的形式将`header`组件传给`SidebarNoteListFilter`组件，在`filter`组件中进行组装。
-> 还有一种简单的方式，就是在noteList组件中渲染好，通过children props的形式传给filter组件。filter组件中通过`Children.map`的形式从子组件中获取props进行筛选处理。但是这种方式react已经要放弃了，所以才用了上面的方式。
+> 还有一种简单的方式，就是在noteList组件中渲染好，通过children props的形式传给filter组件。filter组件中通过`Children.map`的形式从子组件中获取props进行筛选处理。但是`Children`这种方式react已经要放弃了，所以才用了上面的方式。
 
-> 本质上还是在服务端组件中进行渲染好，通过props传递给客户端组件，在客户端组件中进行组装。
+> 本质上还是将目标组件在服务端组件中先渲染好，然后通过props传递给客户端组件，在客户端组件中进行组装。
 
+##### SidebarImport 左侧的导入组件
+
+通过form表单上传文件，一般上传文件需要调用api接口来完成，Next中体现为路由处理程序。
+但是在Next中，还有第二种方式，即`ServerAction`也能替代API接口完成操作。
+
+但是需要注意，由于Next中有一些默认缓存，可能会出现导入之后页面没有变化。是因为构建时被缓存了，Data Cache以及route cache。
+如果是在ServerAction中或者是路由处理程序中：使用`revalidatePath()`重新验证数据，去掉data cache。
+还需要在路由页面中使用`route.refresh()`去掉路由缓存。
 
 #### data 数据
 #### lib 公共库
@@ -115,12 +123,12 @@ Next.js v14 基于 React Server Component 构建的 App Router。该Demo是介�
 
 - app/action.ts serverAction文件
 > serverAction？TODO 不知道是啥
-> 一句话描述就是在服务器端执行的函数
+> 一句话描述就是在服务器端执行的异步函数，用来处理Next应用的数据变化。
 
 访问构建后的资源，发现一些问题：
 初始化时有三条数据，然后加一条数据，然后在新建note/edit时，会发现左侧变回了三条。这是构建时有缓存，路由默认是静态渲染，构建的时候只有三条，所以即使新建了 再进入note/edit路由时还是只有三条数据。
 > 也就是`完整路由缓存`?TODO 
-> 客户端路由是静态渲染的，数据也是缓存的，所以称为完整路由缓存
+> 静态渲染，所以服务端在构建时将RSCPayload以及HTML都缓存了下来，并且数据获取时也有缓存。所以会出现这种情况。
 
 如何禁止Next的这种行为？
 重新验证数据和重新部署。
@@ -139,8 +147,6 @@ ServerActions的好处？
 useFormState用于根据form action的结果来更新表单状态；useFormStatus用于提交表单时显示处理状态。
 > 因为这两个hook还在测试阶段，所以使用时最好以react官方文档为准
 这两个hook在 NoteEditor组件以及SaveButton\DeleteButton组件中有用到 注意SaveButton和DeleteButton中都通过useFormStatus拿到pending状态，是因为这两个button都在同一个form之下, 所以这个状态是一起变化的。
-
-
 
 ## 运行
 

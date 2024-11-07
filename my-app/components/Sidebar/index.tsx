@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import SidebarSearchField from '@/components/SidebarSearchField';
 import SidebarNoteList from '@/components/SidebarNoteList'
+import SidebarImport from '@/components/SidebarImport'
 import EditButton from '@/components/EditButton'
 import NoteListSkeleton from '@/components/NoteListSkeleton'
 
@@ -34,6 +35,8 @@ export default async function Sidebar() {
             <SidebarNoteList />
           </Suspense>
         </nav>
+        {/* 导入 */}
+        <SidebarImport />
       </section>
     </>
   )
