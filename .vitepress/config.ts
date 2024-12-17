@@ -19,7 +19,7 @@ export default defineConfig({
       { text: 'Category', link: '/pages/category' },
       { text: 'Archives', link: '/pages/archives' },
       { text: 'Tags', link: '/pages/tags' },
-      // { text: 'About', link: '/pages/about' }
+      { text: 'About', link: '/pages/about' }
       // { text: 'Airene', link: 'http://airene.net' }  -- External link test
     ],
     search: {
