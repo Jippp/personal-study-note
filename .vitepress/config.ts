@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 import { getPosts } from './theme/serverUtils'
 
 //每页的文章数量
-const pageSize = 10
+const pageSize = 20
 
 const isProd = process.env.NODE_ENV === 'production'
 
