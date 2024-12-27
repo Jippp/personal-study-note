@@ -5,6 +5,8 @@ description: About me
 aside: false
 ---
 
+<HotMap />
+
 ## About me
 
 ---
