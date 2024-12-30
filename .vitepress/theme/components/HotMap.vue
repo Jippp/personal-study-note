@@ -11,7 +11,7 @@ import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel'
 import 'cal-heatmap/cal-heatmap.css'
 import dayjs from 'dayjs'
 import { useData } from "vitepress"
-import { watch, computed, ref } from "vue"
+import { onMounted, watch, computed, ref } from "vue"
 import { CalConfig, PaintConfig, ToolTipConfig, CalendarLabelConfig, DataConfig } from './const'
 
 const { isDark, theme } = useData();
@@ -113,14 +113,16 @@ let cal: CalHeatmap;
 watch(
   [isDark, calSourceData],
   () => {
-    if (isDark.value) {
-      if (cal !== undefined) destory(cal);
-      cal = new CalHeatmap();
-      paint(cal, calSourceData.value, 'dark');
-    } else {
-      if (cal !== undefined) destory(cal);
-      cal = new CalHeatmap();
-      paint(cal, calSourceData.value, 'light');
+    if(document) {
+      if (isDark.value) {
+        if (cal !== undefined) destory(cal);
+        cal = new CalHeatmap();
+        paint(cal, calSourceData.value, 'dark');
+      } else {
+        if (cal !== undefined) destory(cal);
+        cal = new CalHeatmap();
+        paint(cal, calSourceData.value, 'light');
+      }
     }
   },
   {
