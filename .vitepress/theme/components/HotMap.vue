@@ -11,7 +11,7 @@ import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel'
 import 'cal-heatmap/cal-heatmap.css'
 import dayjs from 'dayjs'
 import { useData } from "vitepress"
-import { onMounted, watch, computed, ref } from "vue"
+import { watch, computed, ref } from "vue"
 import { CalConfig, PaintConfig, ToolTipConfig, CalendarLabelConfig, DataConfig } from './const'
 
 const { isDark, theme } = useData();
@@ -133,4 +133,7 @@ watch(
 </script>
 
 <style scoped>
+:deep(.ch-subdomain-bg:hover) {
+  stroke-width: 0;
+}
 </style>

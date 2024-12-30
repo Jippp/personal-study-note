@@ -178,3 +178,7 @@ h2 {
     color: var(--vp-c-text-1);
 }
 
+#ch-tooltip {
+  background-color: rgba(34,34,34,0.8); 
+}
+

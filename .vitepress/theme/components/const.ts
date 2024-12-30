@@ -20,7 +20,7 @@ export const PaintConfig = {
     gutter: 4,
     label: { text: 'YYYY.M月', textAlign: 'middle', position: 'bottom' },
   },
-  subDomain: { type: 'yyDay', radius: 2, width: 11, height: 11, gutter: 4 },
+  subDomain: { type: 'yyDay', radius: 2, width: 12, height: 12, gutter: 4 },
   itemSelector: '#cal-heatmap',
 }
 
