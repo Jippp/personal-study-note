@@ -132,8 +132,16 @@ watch(
 
 </script>
 
-<style scoped>
-:deep(.ch-subdomain-bg:hover) {
+<style>
+.ch-subdomain-bg:hover {
   stroke-width: 0;
+}
+
+/* 使用父级g元素的:has选择器来匹配包含红色文本的组 */
+g:has(.ch-subdomain-text[style*="fill: #ff6b6b"]) .ch-subdomain-bg {
+  opacity: 0.5;
+  cursor: not-allowed;
+  fill: #eee;
+  pointer-events: none;
 }
 </style>

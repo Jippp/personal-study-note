@@ -20,7 +20,19 @@ export const PaintConfig = {
     gutter: 4,
     label: { text: 'YYYY.M月', textAlign: 'middle', position: 'bottom' },
   },
-  subDomain: { type: 'yyDay', radius: 2, width: 12, height: 12, gutter: 4 },
+  subDomain: { 
+    type: 'yyDay', 
+    radius: 2, 
+    width: 12, 
+    height: 12, 
+    gutter: 4,
+    label: (time: number) => {
+      return dayjs(time).isAfter(dayjs(), 'day') ? '𝑋' : '';
+    },
+    color: (time: number) => {
+      return dayjs(time).isAfter(dayjs(), 'day') ? '#ff6b6b' : '';
+    },
+  },
   itemSelector: '#cal-heatmap',
 }
 

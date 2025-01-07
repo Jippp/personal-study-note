@@ -13,10 +13,46 @@
     --date-color: var(--vp-c-text-2);
     --date-font-family: Georgia, sans-serif;
 }
+
+/* Custom Scrollbar Styles
+ * ------------------
+ * ::-webkit-scrollbar - 整个滚动条
+ * ::-webkit-scrollbar-track - 滚动条轨道
+ * ::-webkit-scrollbar-thumb - 滚动条滑块
+ */
+::-webkit-scrollbar {
+    width: 8px;  /* 滚动条宽度 */
+    height: 8px; /* 横向滚动条高度 */
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;  /* 轨道透明 */
+    border-radius: 4px;      /* 轨道圆角 */
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);  /* 滑块颜色 */
+    border-radius: 4px;              /* 滑块圆角 */
+    transition: all 0.2s ease-in-out; /* 过渡动画 */
+}
+
+/* 深色模式下的滚动条样式 */
+.dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);  /* 深色模式下滑块颜色 */
+}
+
+/* 鼠标悬停时的滑块样式 */
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);  /* 悬停时加深颜色 */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);  /* 深色模式下悬停颜色 */
+}
+
 .dark {
     --vp-c-brand: #3b82f6;
 }
-
 
 /* theme reset start */
 
@@ -69,6 +105,18 @@ h2 {
     max-width: 60rem !important;
 }
 
+/* when witdh less 1440 hide the aside 小于1440就到下一挡*/
+@media (min-width: 1280px) {
+    .VPDoc .aside {
+        display: none !important;
+    }
+}
+
+@media (min-width: 1440px) {
+    .VPDoc .aside {
+        display: block !important;
+    }
+}
 
 @media (min-width: 768px) {
     .VPDoc {
@@ -90,26 +138,13 @@ h2 {
         padding: 0 !important;
     }
 }
-/* when witdh less 1440 hide the aside 小于1440就到下一挡*/
-@media (min-width: 1280px) {
-    .VPDoc .aside {
-        display: none !important;
-    }
-}
-
-@media (min-width: 1440px) {
-    .VPDoc .aside {
-        display: block !important;
-    }
-}
-
 
 /*mobile*/
 @media screen and (max-width: 768px) {
-		.vp-doc div[class*='language-'] {
-			width: 100%;
-			margin: 0 auto;
-			border-radius: 8px;
+    .vp-doc div[class*='language-'] {
+        width: 100%;
+        margin: 0 auto;
+        border-radius: 8px;
     }
     .VPDoc {
         padding-top: 10px !important;
@@ -177,8 +212,3 @@ h2 {
     border-radius: 2px;
     color: var(--vp-c-text-1);
 }
-
-#ch-tooltip {
-  background-color: rgba(34,34,34,0.8); 
-}
-
