@@ -12,6 +12,9 @@ description: ws结合sharedWorker实现长连接推送
 
 在工作中遇到了相关长连接的需求。一说到长连接，自然就会想到`webSocket`，但是`webSocket`是基于TCP的，每多一个同源的浏览器上下文，就会新建一个连接，如果用户开了很多标签页，就会导致资源浪费和占用。可以使用`sharedWorker`进行优化，共享一个`webSocket`连接即可。
 
+> [!NOTE]
+> 所有代码都在[`该分支`](https://github.com/Jippp/personal-study-note/tree/review/sharedWorker%2Bws)
+
 ## sharedWorker和ws的简单使用
 
 在介绍之前具体的实现之前，先看一下这两个东西是怎么使用的。
