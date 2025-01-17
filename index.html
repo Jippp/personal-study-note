@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    const event = new EventSource('http://localhost:8000');
+
+    event.addEventListener('message', (event) => {
+      console.log('%c message', 'color: red; font-size: 20px', event.data);
+    })
+
+    event.addEventListener('ping', (event) => {
+      console.log('%c ping', 'color: red; font-size: 20px', event);
+    })
+
+  </script>
+</body>
+</html>
