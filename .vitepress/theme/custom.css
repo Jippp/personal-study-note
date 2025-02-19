@@ -212,3 +212,8 @@ h2 {
     border-radius: 2px;
     color: var(--vp-c-text-1);
 }
+
+[class*='language-'] pre {
+    max-height: 380px;    
+    overflow: auto; 
+}
