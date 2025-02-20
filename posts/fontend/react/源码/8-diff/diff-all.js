@@ -14,6 +14,10 @@
  *  考虑到更新的频率比插入和删除要多，所以优先考虑更新的情况即结果4
  *   可能有位置变动，所以索引已经不能作为判断依据了，根据旧节点列表建立一个key-value 的map
  *   然后遍历新节点列表，初始化一个lastPlacedIndex作为参照物，这个lastPlacedIndex是最后一个可复用节点在旧节点列表中的索引
+ *  
+ *   lastPlacedIndex是在老队列中最右边的位置，接着遍历新元素时如果该元素在老队列中的位置超过了最右边的，说明该节点不会影响新元素的顺序，
+ *   所以 newDomInOldIndex < lastPlacedIndex 该节点会影响新元素的顺序，所以需要移动该元素。
+ * 
  *   接着根据新节点在旧节点列表中索引index 与 lastPlacedIndex 做比较：
  *     index < lastPlacedIndex 说明新节点 要移动位置
  *     其余情况 直接复用节点，更新lastPlacedIndex即可

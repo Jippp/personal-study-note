@@ -13,10 +13,14 @@ description: React diff算法原理
 
 [具体实现代码](https://github.com/Jippp/personal-study-note/blob/master/posts/fontend/react/%E6%BA%90%E7%A0%81/8-diff/diff-all.js)
 
-React中对diff算法做了几个限制，防止时间复杂度过高：
+正常来说两棵树做比较 找到不同的节点，时间复杂度是高达`n^3`的。
 
-+ 只会对同级元素进行diff，如果同一个元素前后跨层级了，那么就会直接销毁掉原来的，新建一个新的
-+ key值相同，type不同时，会直接销毁掉该元素及其子孙节点，并新建一个新的
+所以React中对diff算法做了几个限制，防止时间复杂度过高：
+
+- 只会对同级元素进行diff，如果同一个元素前后跨层级了，那么就会直接销毁掉原来的，新建一个新的
+  - 即假设不存在跨层级的移动，如果元素跨层级 就直接销毁新建。
+- key值相同，type不同时，会直接销毁掉该元素及其子孙节点，并新建一个新的
+  - 使用key来标识**同层级**的元素，可以减少元素的销毁和创建。
 
 在React源码中在`render`阶段对新旧fiber节点作了diff处理
 入口函数为`reconcileChildFibers`， 在该函数中，react会根据`newFiber`的`tags`的不同做出不同的处理
@@ -29,12 +33,12 @@ React中对diff算法做了几个限制，防止时间复杂度过高：
 
 单节点的diff比较简单，直接对比key是否变化：
 
-+ 如果key发生了变化，删除该节点，新建一个Fiber
-+ 如果没有发生变化，会再判断type是否相同，如果相同，会复用该节点，否则删除新建一个Fiber
+- 如果key发生了变化，删除该节点，新建一个Fiber
+- 如果没有发生变化，会再判断type是否相同，如果相同，会复用该节点，否则删除新建一个Fiber
 
 需要注意的是，如果key不同，删除的仅是该节点；如果key相同，type不同，会删除该节点及其子孙节点。也就是说，key不同，react会继续检查其子孙节点，判断是否可以复用；但是如果key相同但是type不同，就会直接根据`newChildren`新建一个Fiber，并不会继续检查子孙节点
 
-## 多节点diff
+## 多节点diff（同层级）
 
 多节点的diff比较复杂，可能有插入、删除、更新这三种操作，但是在日常开发过程中，更新操作占比更大。所以多节点的diff过程，会对更新操作的判断放在最前面
 
@@ -49,16 +53,20 @@ React中对diff算法做了几个限制，防止时间复杂度过高：
 3. `newChildren`遍历完，`oldFiber`没有遍历完，表示删除节点，在第二轮需要遍历接下来的`oldFiber`，将剩下的`oldFiber`添加进待删除列表(fiber.delections)，添加删除标记
 4. `newChildren` `oldFiber`都没有遍历完，表示有节点改变了位置
 
-2、3情况都比较简单，关键是第四种情况，第四种情况说明了有节点位置发生了改变，react中根据最后一个可复用的节点在`oldFiber`中的索引`lastPlacedIndex`作为移动的参照物
+2、3情况都比较简单，关键是第四种情况，第四种情况说明了有节点位置发生了改变
+
+会根据最后一个可复用的节点在`oldFiber`中的索引`lastIndex`作为移动的参照物。
+> [!NOTE]
+> lastIndex表示可复用节点在旧数组中最右侧的位置。如果发现下一个元素的位置超出(>= lastIndex)了 说明不会影响新元素的顺序；反正会影响新元素的顺序。
 
 react在第二轮遍历中作了如下处理：
-首先根据剩下的`oldFiber`建立了一个`key(没有的话为index)为key，节点为value的map映射`，因为这种情况是节点位置改变，不能在通过索引来找到需要对比的节点
-然后遍历剩下的`newChildren`，根据`key`来找到需要对比的节点，再根据`newChildren`的节点在剩下的`oldFiber`中的索引`oldIndex`和`lastPlacedIndex`的大小来判断节点是否发生移动：
+首先根据剩下的`oldFiber`建立了一个`key(没有的话为index)为key，节点为value的map映射`，因为这种情况是节点位置改变，不能在通过索引来找到需要对比的节点。
+然后遍历剩下的`newChildren`，根据`key`来找到需要对比的节点，再根据`newChildren`的节点在剩下的`oldFiber`中的索引`newDomInOldIndex`和`lastIndex`的大小来判断节点是否发生移动：
 
-+ 如果`lastPlacedIndex`要大，说明节点需要移动，为节点添加`Placement`标记
-+ 如果`lastPlacedIndex`要小，说明节点不需要移动，将`lastPlacedIndex`赋值为`oldIndex`
+- 如果`newDomInOldIndex < lastIndex`，影响了新元素的顺序，说明节点需要移动，为节点添加`Placement`标记
+- 如果`newDomInOldIndex >= lastIndex`，说明节点不需要移动。并修改边界条件 即``lastIndex = newDomInOldIndex`
 
-直到newChildren遍历结束，完成diff算法
+直到newChildren遍历结束，完成diff算法。
 
 ## 两个简单的例子理解diff
 
