@@ -19,13 +19,9 @@ description: React状态更新的流程分析
 - `useState`：底层和`useReducer`调用的是一个东西，可以看做是一个特殊的`useReducer`
 - `useReducer`
 
-> 多种方式触发更新，每次触发状态更新，都会创建一个保存更新状态相关的`Update`对象，这个对象是挂载在要更新的fiber节点上的。
+当触发更新状态之后，会在当前组件对应的Fiber节点的`updateQueue`属性上插入一个`Update`对象，`Update`对象上记录了Fiber节点收集到的更新。然后从当前的Fiber节点，一直回溯到最顶端的HostRoot节点。
 
-之前的`render阶段`是从`fiber根节点`开始向下遍历的，而更新时的`Update对象`是保存在其子节点上的，`React`中通过调用某个方法从当前的子节点找到`fiber根节点`（该方法中会向上遍历直到找到`根节点`，并返回根节点）。
-
-在根节点对应的`Fiber树`中某个节点是包含这个`Update`对象的。然后进入`Scheduler`根据更新的`优先级`，判断`同步还是异步`来调度更新。
-
-> 这里的判断封装在`ensureRootIsScheduled`函数中，然后作为参数传给`Scheduler`暴露的函数，这样子连接的`reconciler`以及`scheduler`
+之后从`HostRoot`节点开始对`Fiber树`进行dfs，即上文的`Scheduler+Reconciler`过程。
 
 ### Update对象
 
