@@ -1,4 +1,11 @@
-
+---
+date: 2025-03-03
+title: 面试
+category: interview
+tags:
+- interview
+description: 总结一下面试经验和回答技巧
+---
 
 # 面试时的一些小技巧
 
