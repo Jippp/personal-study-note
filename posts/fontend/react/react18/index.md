@@ -106,7 +106,12 @@ export default App
 用法：包裹一个状态，可以获取该状态的延迟版本。
 比如搜索和展示列表的，搜索框内的需要最新输入状态，但是展示列表可以用上一次的搜索值，直到最新结果返回。
 
-原理：也是基于并发的优先级实现的延迟更新。
+原理：
+
+- 挂载时：直接将状态值返回即可
+- 更新时：判断当前渲染任务的优先级(比如useState分发的dispatch，其中会根据当前fiber来分发优先级，`并发模式下默认SyncLanes`)，如果是高优先级的渲染任务，会将当前渲染任务优先级调低，以此来实现延迟更新，并从`上一次hook.memoizedState`中取出旧值返回。等到所有的高优先级渲染任务执行完之后，再执行这里的低优先级渲染任务，将新值返回即可。
+
+简单概括：通过调整渲染任务的优先级来延迟返回最新的状态值
 
 ### 并发模式对useEffect的影响
 
@@ -144,3 +149,54 @@ function handleClick() {
 ## 增强Suspence
 
 React17中，Suspence主要和懒加载配合实现代码分割的，在React18中新增了fallback属性，可以捕获到子组件抛出的Promise，进而渲染备用页面，减少了loading等状态的管理。
+
+## 新增hook
+
+### useSyncExternalStore
+
+提供的一个可以订阅组件外部数据的hook
+
+```js
+useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?)
+```
+- `subscribe`： 订阅外部数据的方法，并且应该返回一个取消订阅的函数。
+- `getSnapshot`：获取快照。即获取状态的，如果通过该函数获取到的状态发生了变化，就强制渲染视图
+- `getServerSnapshot`：服务端获取快照
+
+```js
+const getSnapshot = () => {
+  return navigator.onLine;
+}
+const subscribe = (callback) => {
+  window.addEventListener('online', callback)
+  window.addEventListener('offline', callback)
+  return () => {
+    window.removeEventListener('online', callback)
+    window.removeEventListener('offline', callback)
+  }
+}
+export default () => {
+  const isOnline = useSyncExternalStore(subscribe, getSnapshot)
+  return <h1>{isOnline ? "✅ Online" : "❌ Disconnected"}</h1>;
+}
+```
+
+提供的`subscribe`方法中监听了`online以及offline`，当变化时执行`callback`，该`callback`是react注入的，会比较前后`getSnapshot`拿到的值是否相等，不相等强制推入一个渲染任务。
+
+所以使用时需要注意：
+- `getSnapshot`返回值要注意，很容易导致死循环：如果返回的是引用值，执行会返回一个新的引用，触发渲染任务。渲染时又调用该函数，返回新引用又再次触发了渲染任务。
+- `subscribe`需要返回一个清空监听器的函数
+
+原理：
+
+基于`useEffect`实现
+
+- 挂载时
+  - 通过`getSnapshot`拿到初始值，放到`hook.memoizedState`中，将`值以及getSnapshot`放到`hook.queue`
+  - 在`mountEffect`中监听，`subscribe`方法增加一个**handleStoreChange方法**，该方法中判断值变化就`强制刷新页面`，实际是触发一个`SyncLanes`优先级的渲染任务。
+- 更新时
+  - 基本上是相同的逻辑
+  - 从旧fiber节点中取旧值，通过`getSnapshot`拿新值，判断是否变化
+  - 在`updateEffect`中添加监听，和上面一样
+
+可以看到不管是mount还是update，都会调用`getSnapshot`获取新值去判断，如果`getSnapshot`直接返回引用值就会导致无限循环。
