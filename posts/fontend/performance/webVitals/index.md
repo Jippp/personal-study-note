@@ -104,6 +104,13 @@ observer.observe({ type: 'paint', buffered: true });
 从用户首次进入页面到页面绘制结束，**最大内容**所花费的绘制时间。
 这个最大内容，并不是一成不变的，而是在变化的，只有页面趋于稳定，才能确定这个最大内容。
 
+一般来说，以下这些元素会影响到LCP指标：
+- `<img>元素`
+- `svg中的<image>元素`
+- `<video>`
+- 带`url()`背景图的元素
+- 块级元素带有文本节点
+
 该指标从另一个角度衡量了页面的响应速度，良好的TCP指标应该小于2.5s。
 
 该指标跨度很大，从**用户一开始进入页面到页面绘制结束**，中间经历了这些过程：
@@ -130,6 +137,14 @@ const observer = new PerformanceObserver(handler)
 // 监听FCP
 observer.observe({ type: 'largest-contentful-paint', buffered: true })
 ```
+
+#### 优化方向
+
+因为LCP是在FCP之后，所以FCP的优化方式也会影响LCP。
+此外还需要关注资源的优化：
+- 优化和压缩资源大小
+- 预加载(图片preload，资源prefetch)
+- 压缩文本文件(Gzip)
 
 ### TTI
 
