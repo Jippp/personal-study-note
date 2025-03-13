@@ -186,7 +186,7 @@ const Some = () => {
 
 通过sharedWorker可以让不同tab间共享这一个ws连接。
 
-具体可以看[`这里`](/posts/fontend/solutions/longConnection/)
+具体可以看[`这里`](/posts/frontend/solutions/longConnection/)
 
 ### 全局响应拦截处理
 

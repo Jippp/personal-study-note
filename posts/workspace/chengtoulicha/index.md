@@ -49,7 +49,7 @@ description: 复盘城投利差需求，找到问题，复盘和总结
 - 页面流畅度提升，loading 体验优化，防止用户在请求未完成时触发额外操作。
 
 > [!NOTE]
-> 具体看[这里](/posts/fontend/solutions/requestLimit)
+> 具体看[这里](/posts/frontend/solutions/requestLimit)
 
 ### 批量添加曲线时的性能问题
 
