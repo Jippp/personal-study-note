@@ -3,13 +3,26 @@ import matter from 'gray-matter'
 import fs from 'fs-extra'
 import { resolve } from 'path'
 
-async function getPosts(pageSize: number) {
+interface PostItem {
+  frontMatter: {
+    /** 日期 */
+    date: string;
+    /** 文章标题 */
+    title: string;
+    /** 草稿 */
+    private?: boolean;
+    [k: string]: any;
+  };
+  regularPath: string;
+}
+
+export async function getBasePosts(pageSize: number) {
   let paths = await globby(['posts/**/index.md'])
 
   //生成分页页面markdown
   await generatePaginationPages(paths.length, pageSize)
 
-  let posts = await Promise.all(
+  return await Promise.all(
     paths.map(async (item) => {
       const content = await fs.readFile(item, 'utf-8')
       const { data } = matter(content)
@@ -17,11 +30,17 @@ async function getPosts(pageSize: number) {
       return {
         frontMatter: data,
         regularPath: `/${item.replace('.md', '.html')}`
-      }
+      } as PostItem
     })
   )
-  posts.sort(_compareDate as any)
-  return posts
+}
+
+export function getActivePosts(posts: PostItem[]) {
+  return posts.filter(_filterShowPage as any).sort(_compareDate as any)
+}
+
+export function getDraftPosts(posts: PostItem[]) {
+  return posts.filter(_filterDraftPage as any)
 }
 
 const getTemplate = ({
@@ -73,4 +92,9 @@ function _compareDate(obj1: { frontMatter: { date: number } }, obj2: { frontMatt
   return obj1.frontMatter.date < obj2.frontMatter.date ? 1 : -1
 }
 
-export { getPosts }
+function _filterShowPage(obj: { frontMatter: { private: boolean } }) {
+  return !obj.frontMatter.private
+}
+function _filterDraftPage(obj: { frontMatter: { private: boolean } }) {
+  return !!obj.frontMatter.private
+}

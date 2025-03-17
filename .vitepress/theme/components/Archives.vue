@@ -1,3 +1,17 @@
+<script lang="ts" setup>
+  import { useData, withBase } from 'vitepress'
+  import { computed } from 'vue'
+  import { useYearSort } from '../functions'
+
+  const { isDraft } = defineProps({
+    isDraft: Boolean
+  })
+
+  const { theme } = useData()
+
+  const data = computed(() => useYearSort(theme.value[isDraft ? 'draftPosts' : 'posts']))
+</script>
+
 <template>
   <div v-for="yearList in data">
     <div class="year">
@@ -12,15 +26,6 @@
     </a>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { useData, withBase } from 'vitepress'
-import { computed } from 'vue'
-import { useYearSort } from '../functions'
-
-const { theme } = useData()
-const data = computed(() => useYearSort(theme.value.posts))
-</script>
 
 <style scoped>
 .year {
