@@ -11,13 +11,22 @@ import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel'
 import 'cal-heatmap/cal-heatmap.css'
 import dayjs from 'dayjs'
 import { useData } from "vitepress"
-import { watch, computed, ref } from "vue"
+import { watch, computed, ref, onMounted } from "vue"
 import { CalConfig, PaintConfig, ToolTipConfig, CalendarLabelConfig, DataConfig } from './const'
 
 const { isDark, theme } = useData();
 
-const calSourceData = ref([])
+const isDocument = ref(true)
+const calSourceData = ref<{
+  date: string;
+  value: string;
+}[]>([])
 const postData = computed(() => theme.value.posts)
+
+onMounted(() => {
+  isDocument.value = !!document
+})
+
 watch(postData, () => {
   if (postData.value.length !== 0) {
     const countMap = postData.value.reduce((countMap: Record<string, number>, item) => {
@@ -113,7 +122,7 @@ let cal: CalHeatmap;
 watch(
   [isDark, calSourceData],
   () => {
-    if(document) {
+    if(isDocument.value) {
       if (isDark.value) {
         if (cal !== undefined) destory(cal);
         cal = new CalHeatmap();

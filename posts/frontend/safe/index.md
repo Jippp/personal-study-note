@@ -90,7 +90,7 @@ Cross Site Scripting跨站脚本攻击。
 
 #### cookie的HttpOnly
 
-通过该属性可以保护`Cookie`不被JS(document.cookie)操作
+通过该属性可以保护`Cookie`不被JS(`document.cookie`)操作
 
 ## CSRF
 

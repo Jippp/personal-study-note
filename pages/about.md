@@ -5,7 +5,9 @@ description: About me
 aside: false
 ---
 
-<HotMap />
+<ClientOnly>
+  <HotMap />
+</ClientOnly>
 
 ## About me
 
