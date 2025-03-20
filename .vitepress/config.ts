@@ -1,4 +1,7 @@
 import { defineConfig } from 'vitepress'
+import { visualizer } from 'rollup-plugin-visualizer'
+import { compression } from 'vite-plugin-compression2'
+import imagemin from 'unplugin-imagemin/vite';
 import { getBasePosts, getActivePosts, getDraftPosts } from './theme/serverUtils'
 
 //每页的文章数量
@@ -30,7 +33,9 @@ export default async function() {
         // { text: 'Airene', link: 'http://airene.net' }  -- External link test
       ],
       search: {
+        // TODO localSearch chunk包太大
         provider: 'local',
+        // FEATURE 隐藏页面需要排除掉
       },
       //outline:[2,3],
       outline: {
@@ -52,9 +57,34 @@ export default async function() {
     lastUpdated: true,
   
     vite: {
-      // 生产环境简化产物
-      build: { minify: isProd },
-      server: { port: 5000 }
+      ssr: {
+        noExternal: ['cal-heatmap']
+      },
+      build: { 
+        // 生产环境简化产物
+        minify: isProd,
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'cal-heatmap': ['cal-heatmap'],
+            }
+          }
+        }
+      },
+      server: { port: 5000 },
+      plugins: [
+        compression(),
+        imagemin(),
+        !isProd ? visualizer(
+          {
+            // emitFile: true,
+            // filename: "stats.html",
+            open: true,  // 打包后自动打开页面
+            gzipSize: true,  // 查看 gzip 压缩大小
+            brotliSize: true // 查看 brotli 压缩大小
+          }
+        ) : null,
+      ]
     }
   })
 }
