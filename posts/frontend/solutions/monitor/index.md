@@ -24,7 +24,8 @@ description: 从0开始介绍监控平台
 一个前端监控平台，大致的流程如下：
 1. 前端对数据进行收集
 2. 前端上报数据
-3. 服务端接收到数据后分析处理
+3. 服务端接收到数据后分析处理：数据加工、清洗、聚合等操作后入库
+4. 数据用途：监控管理、性能优化、异常分析、行为分析等等
 
 ## 监控的目的
 
@@ -40,6 +41,8 @@ description: 从0开始介绍监控平台
 > [!NOTE]
 > 不同业务对监控平台的要求不同，有的业务对性能要求高，有的业务对稳定性要求高，有的业务需要监控用户行为。所以监控平台的搭建需要根据业务需求来定制。
 
+监控一般是三个方向的：错误的监控、性能的采集、用户行为的监控。
+
 ### 捕获错误日志
 
 #### 前端的错误分类
@@ -50,6 +53,8 @@ description: 从0开始介绍监控平台
 - 和服务端的通信错误
 
 #### 错误捕获
+
+语法错误：不正确的编码会导致报错，比如`foo(`这就是一个语法错误。这种错误一般不会被捕获到，因为还没到执行就已经报错了。
 
 - `window.onerror`
 
@@ -70,7 +75,12 @@ window.onerror = function(message, source, lineno, colno, error) {
 
 - `window.addEventListener('error')`
 
-和`window.onerror`类似，但是`window.addEventListener('error')`可以捕获到资源加载时的错误
+和`window.onerror`类似，但是`window.addEventListener('error', fn, true)`可以在**捕获阶段**监听到资源加载时的错误
+
+资源加载时的error，会被该元素上的`onerror`处理函数，不会冒泡到window上，所以`window.onerror`捕获不到资源加载时的错误。
+但是这些事件可以在捕获阶段监听到，所以`window.addEventListener('error', fn, true)`能在捕获阶段监听到资源加载的错误。
+
+需要注意`addEventListener`的第三个参数`true`，表示在捕获阶段执行，`false`表示在冒泡阶段执行。默认为false。
 
 - `try/catch`
 
@@ -165,7 +175,7 @@ class ErrorBoundary extends React.Component {
 
 - `和服务端的通信错误`
 
-常指的是接口报错，浏览器内置的`XMLHttpRequest`和`fetch`，通常采用AOP重写方法，已实现自定义的接口拦截。当然也可以对这些请求方式再包裹一层，对结果进行判断，添加自定义逻辑，之后再返回出去即可完成拦截。
+常指的是接口报错，浏览器内置的`XMLHttpRequest`和`fetch`，通常采用AOP重写方法，实现自定义的接口拦截。当然也可以对这些请求方式再包裹一层，对结果进行判断，添加自定义逻辑，之后再返回出去即可完成拦截。
 
 当然现在的请求库一般都提供了`拦截器`的功能，可以直接使用。一些古老的项目可能需要自己实现。
 
@@ -188,8 +198,19 @@ class ErrorBoundary extends React.Component {
 
 需要注意上报的时机：如果在当前页面，一般是浏览器空闲时上报；另外离开页面也需要立即上报。
 
+实际中，上报的数据可能很多，所以不能阻塞主线程的执行。需要考虑：批量上传和延迟上传。
+
+就是将待上传的数据存储在本地，然后在空闲时批量上传。
+
 通过`sendBeacon`、`XMLHttpRequest`、`fetch`等方式来上传数据。
 
+- sendBeacon
+原生支持的，并且能在页面关闭前上报还不会阻塞页面的关闭。
 
+但是兼容性以及只支持POST请求。
 
+- fetch
 
+页面关闭时可能丢失请求
+
+所以优先使用sendBeacon，其次是fetch。
