@@ -1,9 +1,10 @@
 ---
 date: 2025-03-12
 title: typescript中的装饰器
-category: 装饰器
+category: TS
 tags:
 - 装饰器
+- TS
 description: 总结一下TS中的装饰器用法
 ---
 

@@ -9,4 +9,4 @@ aside: false
   const { theme } = useData();
   const posts = theme.value.posts.slice(20,40)
 </script>
-<Page :posts="posts" :pageCurrent="2" :pagesNum="4" />
+<Page :posts="posts" :pageCurrent="2" :pagesNum="5" />

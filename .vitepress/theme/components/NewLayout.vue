@@ -13,19 +13,21 @@
   );
   const datetime = ref('');
   const disDateTime = ref('')
+  const lastUpdatedFromNow = ref(theme.value.lastUpdatedFromNow)
 
   onMounted(() => {
     watchEffect(() => {
-      datetime.value = new Intl.DateTimeFormat(
-        theme.value.lastUpdated?.formatOptions?.forceLocale ? lang.value : undefined,
-        theme.value.lastUpdated?.formatOptions ?? {
-          dateStyle: 'short',
-          timeStyle: 'short'
-        }
-      ).format(date.value)
-
-      disDateTime.value = dayjs(date.value).fromNow()
-    })
+      if(lastUpdatedFromNow.value) {
+        datetime.value = new Intl.DateTimeFormat(
+          theme.value.lastUpdated?.formatOptions?.forceLocale ? lang.value : undefined,
+          theme.value.lastUpdated?.formatOptions ?? {
+            dateStyle: 'short',
+            timeStyle: 'short'
+          }
+        ).format(date.value)
+        disDateTime.value = dayjs(date.value).fromNow()
+      }
+    });
   });
 
 </script>
@@ -33,7 +35,7 @@
 <template>
   <Layout>
     <template #doc-before>
-      <div class="custom-block caution" v-if="!$frontmatter.page">
+      <div class="custom-block caution" v-if="lastUpdatedFromNow && !$frontmatter.page">
         <p class="custom-block-title">⚠️ Important Notice</p>
         <p>This post was last updated on: <strong>{{ datetime }}</strong> which was <strong>{{ disDateTime }}</strong>. Please pay attention to its timelines.</p>
       </div>

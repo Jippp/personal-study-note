@@ -49,7 +49,8 @@ export default async function() {
           dateStyle: 'full',
           timeStyle: 'medium'
         }
-      }
+      },
+      lastUpdatedFromNow: isProd,
     } as any,
     srcExclude: ['readme.md', 'Readme.md', 'README.md'],
     head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
