@@ -74,6 +74,25 @@ Cross Site Scripting跨站脚本攻击。
 
 可以看到XSS攻击的主要方式，就是在页面中注入恶意脚本，从而达到窃取用户信息或其他攻击目的的。
 
+恶意脚本：
+- `<script>alert('xss')</script>`
+- `<input onfocus="alert('xss')" autofocus />`
+- `<img src onerror="alert('xss')" />`
+- `<svg onload="alert('xss')" />`
+- `<a href="javascript:alert('xss')" />`
+
+可以看到主要原理就是通过事件回调来插入脚本的。
+
+所以常见的应对手段，就是对渲染内容进行**转译**，转译之后是一个纯字符串不会执行。
+
+在React中，元素是通过`JSX`创建的，本质是一个VDom：
+1. Vdom中有一个`$$typeof`标记，是一个`Symbol`类型的，可以有效防止XSS，因为网络传输一般都会通过JSON转译，但是JSON传不了Symbol类型。React校验不通过就不会渲染成DOM节点。
+2. 另外React在渲染之前，会对所有内容进行转译，也可以防止XSS
+
+但是并不是说完全杜绝了XSS，
+- 比如`dangerouslySetInnerHTML`，React不会对该内容进行转译，有风险。
+- 直接使用用户输入的内容作为回调(a标签的href、img的src等)也可能有风险。
+
 #### 服务端对关键字过滤或编码处理
 
 服务器端接收或者返回时，对一些特殊字符如`<script>`进行过滤或者转码，这样就起到了一个防范作用。
