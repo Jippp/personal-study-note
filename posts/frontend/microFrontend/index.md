@@ -1,10 +1,10 @@
 ---
 date: 2024-11-07
 title: 微前端总览介绍
-category: MicroFontend
+category: MicroFrontend
 tags:
 - frontend
-- MicroFontend
+- MicroFrontend
 description: 大概的介绍一下微前端的背景以及方案
 ---
 

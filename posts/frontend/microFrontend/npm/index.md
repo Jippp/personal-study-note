@@ -1,10 +1,10 @@
 ---
 date: 2024-12-19
 title: npm方案实现微前端
-category: MicroFontend
+category: MicroFrontend
 tags:
 - frontend
-- MicroFontend
+- MicroFrontend
 description: 通过npm来实现微前端以及优缺点
 ---
 

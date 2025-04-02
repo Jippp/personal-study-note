@@ -1,10 +1,10 @@
 ---
 date: 2024-11-12
 title: 微前端原理-V8隔离
-category: MicroFontend
+category: MicroFrontend
 tags:
 - frontend
-- MicroFontend
+- MicroFrontend
 description: 从V8隔离的角度来深入微前端设计
 ---
 
