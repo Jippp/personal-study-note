@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <h1>Hello!</h1>
+  
+  <!-- 导航 -->
+  <div id="nav"></div>
+  <!-- 内容 -->
+  <div id="container"></div>
+
+  <!-- 微前端控制逻辑 -->
+  <script type="text/javascript">
+    /* 
+      隔离类
+      维护子应用的隔离
+      创建、激活、销毁隔离实例
+    */
+    class MicroAppSandbox {
+      // 配置信息 microRootElm id scriptText 
+      options = null;
+      // 是否执行过js
+      exec = false
+      // 子应用js运行前的主应用window快照
+      mainWindow = {}
+      // 当前子应用运行后的window快照
+      microWindow = {}
+      // 当前子应用运行后有变动的属性集合
+      diffPropsMap = {}
+
+
+      constructor(options) {
+        this.options = options
+        this.wrapScript = this.createWrapScript()
+      }
+
+      createWrapScript() {
+        // IIFE中执行子应用js，隔离作用域
+        return `;(function (window) {
+          ${this.options.scriptText}
+        })(window)`;
+      }
+
+      execWrapScript() {
+        // 通过eval在全局作用域中执行子应用的js
+        (0, eval)(this.wrapScript)
+      }
+
+      // 子应用运行前记录主应用的window，失活时判断哪些有变化
+      recordMainWindow() {
+        for(const prop in window) {
+          if(window.hasOwnProperty(prop)) {
+            this.mainWindow[prop] = window[prop]
+          }
+        }
+      }
+
+      // 子应用运行前恢复上一次的状态
+      recoverMicroWindow() {
+        Object.keys(this.diffPropsMap).forEach(prop => {
+          window[prop] = this.diffPropsMap[prop]
+        })
+        this.microWindow = window
+      }
+
+      // 失活前判断哪些有变化，记录到缓存
+      recordDiffPropsMap() {
+        for(const prop in this.microWindow) {
+          // 判断是否有变化。这里直接判断引用
+          if(window.hasOwnProperty(prop) && this.microWindow[prop] !== this.mainWindow[prop]) {
+            this.diffPropsMap[prop] = this.microWindow[prop]
+            // 对于变化的，主应用中需要恢复。避免其他子应用被污染
+            window[prop] = this.mainWindow[prop]
+          }
+        }
+      }
+
+      // 激活
+      active() {
+        window.microRootElm = this.options.microRootElm || document.body
+        // 记录主应用window
+        this.recordMainWindow()
+        // 恢复上一次的状态
+        this.recoverMicroWindow()
+        if(this.exec) return
+        this.exec = true
+
+        // 执行当前子应用的js代码
+        this.execWrapScript()
+      }
+
+      // 失活
+      inactive() {
+        this.diffPropsMap = {}
+        // 失活前记录本次运行产生的变化，并恢复主应用window
+        this.recordDiffPropsMap()
+        console.log(`%c ${this.options.id} 变化的props：`, 'color: red; font-size: 20px', this.diffPropsMap);
+      }
+      // 销毁
+      destory() {
+        this.options = null
+        this.exec = false
+      }
+    }
+
+    /* 
+      管理单个子应用的类
+      请求和缓存子应用的资源
+      激活子应用
+    */
+    class MicroApp {
+      // 子应用的script文本
+      scriptText = ''
+      // 隔离实例 MicroAppSandbox实例
+      sandbox = null
+      // 子应用挂载的根节点
+      rootElm = null
+      app = null;
+
+      constructor(rootElm, app) {
+        this.rootElm = rootElm
+        this.app = app;
+      }
+
+      // 获取JS文本
+      async fetchScript(scriptSrc) {
+        try {
+          const res = await window.fetch(scriptSrc)
+          return await res.text()
+        } catch (error) {
+          console.error(error)
+        }
+      }
+
+      // 激活子应用
+      async active() {
+        // script文本的缓存
+        if(!this.scriptText) {
+          this.scriptText = await this.fetchScript(this.app.script)
+        }
+        // 隔离实例的创建
+        if(!this.sandbox) {
+          const microRootElm = document.createElement('div')
+          microRootElm.setAttribute('id', `${this.app.id}-dom`)
+          this.rootElm.appendChild(microRootElm)
+          this.sandbox = new MicroAppSandbox({
+            microRootElm,
+            scriptText: this.scriptText,
+            id: this.app.id
+          })
+        }
+
+        // 激活
+        this.sandbox.active()
+
+        // 约定通过 id=${this.app.id}-dom` 的元素来展示子应用
+        const microElm = document.getElementById(`${this.app.id}-dom`)
+        if(microElm) {
+          microElm.style = "display: block"
+        }
+      }
+
+      inactive() {
+        const microElm = document.getElementById(`${this.app.id}-dom`)
+        if(microElm) {
+          microElm.style = "display: none"
+        }
+        this.sandbox?.inactive()
+      }
+    }
+
+    /* 
+      管理全部子应用的类
+      预加载、添加和删除子应用
+    */
+    class MicroApps {
+      // 子应用实例MicroApp实例映射表
+      appsMap = new Map()
+      // 子应用挂载的根节点信息 即内容区域
+      rootElm = null
+
+      constructor(rootElm, apps) {
+        this.rootElm = rootElm
+        this.setAppMaps(apps)
+      }
+
+      setAppMaps(apps) {
+        apps.forEach(app => {
+          this.appsMap.set(app.id, new MicroApp(this.rootElm, app))
+        })
+      }
+      // prefetch预获取子应用
+      prefetchApps() {
+        // TODO
+      }
+
+      // 激活子应用
+      activeApp(id) {
+        const app = this.appsMap.get(id)
+        app?.active()
+      }
+      // 失活子应用
+      inactiveApp(id) {
+        const app = this.appsMap.get(id)
+        app?.inactive()
+      }
+    }
+
+    /* 
+      管理主应用的类
+      获取子应用列表信息
+      创建子应用导航
+      切换子应用事件
+    */
+    class MainApp {
+      microApps = []
+      microAppsManager = null
+
+      constructor() {
+        this.init()
+      }
+
+      async init() {
+        // 从服务器拿到子应用列表
+        this.microApps = await this.fetchMicroApps()
+        // 根据子应用列表创建导航
+        this.createNav()
+        this.navClickListener()
+        this.hashChangeListener()
+        // 创建管理子应用的实例
+        this.microAppsManager = new MicroApps(
+          document.getElementById('container'),
+          this.microApps
+        )
+      }
+
+      // 从主应用服务器获取到子应用列表信息
+      async fetchMicroApps() {
+        try {
+          const res = await window.fetch('/microapps', {
+            method: 'post'
+          })
+          return await res.json()
+        } catch (error) {
+          console.error(error)
+        }
+      }
+
+      // 根据子应用列表创建导航
+      createNav(microApps) {
+        const fragment = new DocumentFragment()
+        this.microApps?.forEach(microApp => {
+          const button = document.createElement('button')
+          button.textContent = microApp.name
+          button.id = microApp.id
+          fragment.appendChild(button)
+        })
+        // 添加到页面#nav元素上
+        nav.appendChild(fragment)
+      }
+
+      // 监听导航的点击事件
+      navClickListener() {
+        const nav = document.getElementById('nav')
+        nav.addEventListener('click', (e) => {
+          // 通过修改hash来切换子应用
+          window.location.hash = e.target?.id
+        })
+      }
+
+      hashChangeListener() {
+        window.addEventListener('hashchange', () => {
+          // this.microApps?.forEach(async ({ id }) => {
+          //   if(id === window.location.hash.replace('#', '')) {
+          //     this.microAppsManager.activeApp(id)
+          //   }else {
+          //     this.microAppsManager.inactiveApp(id)
+          //   }
+          // })
+          // 因为microApps是数组 有顺序，所以要先找到失活的，再找到需要激活的。
+          // 否则按顺序遍历可能会先激活再失活，导致状态管理混乱。
+          // 比如子应用1 子应用2。从2到1，如果按顺序会先激活2再失活1 这样1的状态没有恢复就已经到2了 即使后面1失活了 但是2还是1的状态。
+          this.microApps?.forEach(async ({ id }) => {
+            if(id !== window.location.hash.replace('#', '')) {
+              this.microAppsManager.inactiveApp(id)
+            }
+          })
+          this.microApps?.forEach(async ({ id }) => {
+            if(id === window.location.hash.replace('#', '')) {
+              this.microAppsManager.activeApp(id)
+            }
+          })
+        })
+      }
+      
+    }
+
+
+    /* 
+      启动主应用时：
+      1. 从服务器获取子应用列表信息，创建导航，并添加导航的跳转事件
+      2. 实例化管理所有子应用的类
+    */
+    new MainApp()
+  </script>
+
+</body>
+</html>
