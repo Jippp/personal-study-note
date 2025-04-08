@@ -93,10 +93,6 @@ SPA下子应用是处于同一Renderer进程中的，浏览器的沙箱隔离失
 - 通过导航设计来根据导航引入不同的子应用；
 - 通过内容设计让页面更完整；
 
-### 状态
-
-<!-- TODO -->
-
 ### 隔离
 
 JS隔离和DOM(CSS)隔离
@@ -209,7 +205,7 @@ JS的隔离主要解决的问题，就是变量冲突，在这种方案下，所
   - 可以解决let或const声明变量的隔离
   - 非严格模式下this指向window全局对象，可能造成全局属性的污染
   - 非严格模式下不使用标识符，会创建全局变量，如`a = 1`，非严格模式下会创建一个全局变量a
-  虽然使用立即执行函数，能提到隔离的作用，但是子应用必须要封转到该IIFE中执行，就导致丢失了一些特性(相比直接在全局作用域中执行)；且对于全局属性、变量的污染问题并没有解决。
+  虽然使用立即执行函数，能提到隔离的作用，但是子应用必须要封装到该IIFE中执行，就导致丢失了一些特性(相比直接在全局作用域中执行)；且对于全局属性、变量的污染问题并没有解决。
 
 想要手动执行一段JS代码，有以下几种方法：
 1. `script`标签加载内嵌的JS代码字符串
@@ -234,7 +230,7 @@ console.log(fn(1,2))
 所以一般通过`Function`来手动执行一段JS代码。
 
 > [!NOTE]
-> 再执行一段JS字符串时需要注意，如果变量被构建工具压缩了，也可能会导致意料之外的问题。
+> 在执行一段JS字符串时需要注意，如果变量被构建工具压缩了，也可能会导致意料之外的问题。
 
 快照隔离的本质：添加一个中间快照层，初始化子应用时记录主应用的window快照，运行子应用时是在这个window快照上的，等失活时，记录本次运行操作的内容(变量、属性等)，然后将window恢复。等下一次激活时，从缓存中拿到值来恢复状态。
 
@@ -265,10 +261,174 @@ CSS隔离是指主应用和子应用之间的隔离、子应用和子应用之�
 
 所以可以通过`Shadow DOM`包裹子应用，就达到了CSS隔离的目的。
 
-### 性能
+### 性能优化
 
-<!-- TODO -->
+前端应用的性能优化方式主要是两个方向：
+1. 网络资源
+2. 浏览器渲染
+
+而在微前端中，主要性能瓶颈在以下几个方面：
+- 主应用和子应用的资源加载
+- 子应用切换可能导致性能问题
+- 子应用的公共代码
+- 子应用的公共依赖库
+
+#### 网络资源
+
+HTTP缓存：
+- 强缓存：http1.1的`Cache-Control`、http1.0的`Expires`
+  - `Expires`: 一个过期时间。是服务器返回的GMT格式的绝对时间`Expires: Mon, 07 Apr 2025 02:34:22 GMT`。再次请求时浏览器会根据**响应头Date(没有就用本地接收到该响应时的绝对时间)**和Expires的时间进行对比，判断是否过期。如果本地和服务端的时间不一致，可能会导致缓存失效。
+  - `Cache-Control`: `Expires`的弊端(无Date时两个时钟可能不一致)，所以HTTP1.1引入了`Cache-Control`。可以通过`max-age`设置一个相对时间，比如20s后过期。相对时间的好处就是完全由浏览器端控制，避免了双端时钟不一致导致的问题。
+- 协商缓存：`Last-Modified`、`ETag`
+  - 工作流程：第一次请求时添加相关的头部字段；后面再次请求时浏览器携带上一次的头部字段，让服务端去判断资源是否有效。
+  - `Last-Modified`：服务器返回的GMT格式的绝对时间`Last-Modified: Thu, 03 Apr 2025 07:53:48 GMT`。再次请求时浏览器会自动携带`If-Modified-Since`头部字段，服务端会来判断资源是否变动。
+  - `ETag`：服务端返回的一个资源唯一标识。再次请求时浏览器会自动携带`If-None-Match`头部字段，服务端会根据请求的ETag和当前ETag进行对比，如果没有变动就返回304状态码。
+
+#### 浏览器渲染
+
+`Resource Hints`：浏览器在解析HTML时，遇到`<link rel="preload">`、`<link rel="prefetch">`、`<link rel="preconnect">`等标签时，会提前加载资源：
+- `DNS Prefetch`：提前解析域名，减少DNS解析时间
+- `Preconnect`：提前给URL建立请求连接，包括DNS、TCP、TLS这些连接。
+- `Prefetch`：提前获取并缓存资源，可能在未来的导航中使用。
+- `Preload`：提前加载资源，以提高页面加载性能。
+- `Prerender`：提前获取、缓存资源，并且预渲染资源。即在隐藏的标签页中进行渲染
+
+`Resource Hints`允许浏览器在空闲时进行稍后可能需要进行的动作，从而提高用户体验。比如在登录页可以预测接下来会登录并访问到首页，所以可以通过`Resource Hints`预测资源来提高用户体验。
+
+预渲染：`Resource Hints`中的`Prerender`需要一个HTML地址，在SPA应用中不适用，所以需要对子应用的预渲染特殊处理。
+因为需要在空闲时执行，所以一般会借助`requestIdleCallback`来实现。
+`Resource Hints`中的`Prefetch`和`requestIdleCallback`的空闲时间区别：`Prefetch`的空闲是浏览器加载完当前页面后，如果还有空闲时间就开始加载`Prefetch`的资源；`requestIdleCallback`的空闲是一帧内处理完高优先级任务后的剩余时间。
+
+#### 小结
+
+微前端中的性能优化其实是通用的，但是要重点专注两个方面：一是子应用的加载和切换，二是子应用资源的加载和重复代码的处理。
+
+子应用的加载可以通过HTTP缓存来优化、`Resource Hints`提前加载、渲染等来提高用户体验；
+子应用的切换可以通过预渲染子应用来提高性能；
+子应用资源的加载也能通过HTTP缓存来优化；
+子应用间重复代码的处理：Module Federation模块联邦；同一工程内能在构建时对子应用间的重复代码切割、缓存。
+
+总之性能优化从网络资源以及浏览器渲染这两个大方向去思考，一般都能找到比较好的解决思路。
 
 ### 通信
 
-<!-- TODO -->
+微前端中，通信也是重要的一部分。
+
+观察者和发布订阅是两种常用的通信模式。
+
+观察者是一对多的单向通信；发布订阅是多对多的双向通信。
+
+#### 观察者模式
+
+在观察模式中有一个Subject对象和多个Observer对象，Observer对象订阅Subject的变化，当Subject变化时会通知所有订阅的Observer对象。
+```js
+class Watch {
+  constructor() {
+    this.observers = []
+  }
+
+  subscribe(observer) {
+    this.observers.push(observer)
+  }
+
+  notify(data) {
+    this.observers.forEach(observer => observer.update(data))
+  }
+
+  unsubscribe(observer) {
+    this.observers = this.observers.filter(item => item !== observer)
+  }
+}
+
+const watch = new Watch()
+const observer1 = {
+  update: () => console.log('observer1')
+}
+const observer2 = {
+  update: () => console.log('observer2')
+}
+// 添加一个观察者
+watch.subscribe(observer1)
+// 添加另一个观察者
+watch.subscribe(observer2)
+
+// something change to notify
+watch.notify('Data has changed')
+```
+
+上面是一个简单的观察者模式，多个观察者通过订阅(subscribe)的方式来监听Subject的变化，当Subject变化时会通知(notify)所有订阅的Observer对象。
+
+#### 发布订阅模式
+
+发布订阅中有三个对象：Publisher、Subscriber和Channel：
+- Publisher：发布者，负责发布信息；
+- Subscriber：订阅者，负责订阅信息；
+- Channel：信息传输的通道；
+
+Publisher向某个Channel传输信息，Subscriber向Channel订阅信息监听变化。
+发布者也可以订阅，订阅者也可以发布，这样就能实现双向通信。
+```js
+class Pubsub {
+  constructor() {
+    this.channels = {}
+    this.token = 0
+  }
+
+  // 订阅者，生产消息的
+  subscribe(channel, callback) {
+    if(!this.channels[channel]) {
+      this.channels[channel] = []
+    }
+    this.channels[channel].push({
+      token: this.token++,
+      callback,
+    })
+  }
+
+  unsubscribe(token) {
+    for(const channel in this.channels) {
+      const current = this.channels[channel]
+      const index = current.findIndex(({ token: t }) => t === token)
+      if(index !== -1) {
+        current.splice(index, 1)
+        if(current.length === 0) {
+          delete this.channels[channel]
+        }
+        return
+      }
+    }
+  }
+
+  // 发布者，消费消息
+  publish(channel, data) {
+    const current = this.channels[channel]
+    if(!current) return
+
+    current.forEach(({ callback }) => {
+      callback(data)
+    })
+  }
+}
+
+const pubsub = new Pubsub() 
+
+pubsub.subscribe('test', (data) => {
+  console.log('test1', data)
+})
+pubsub.subscribe('test', (data) => {
+  console.log('test2', data)
+})
+
+pubsub.publish('test', 'hello world')
+```
+
+从上面两种模式的简单实现来看，观察者模式是一种需要消息中心的、一对多的通信方式；发布订阅模式通过不同的channel来实现多对多的通信方式。观察者模式更加紧凑、而发布订阅更加松散解耦。
+
+#### 微前端的通信
+
+在微前端中，一般都是多对多的通信方式，所以一般都是发布订阅模式来通信的。比如`single-spa`通过`EventTarget(dispatchEvent api)`来实现通信。
+
+> [!NOTE]
+> EventTarget在不同源之间通信会报错。这时可以选择postMessage来通信。
+
+
