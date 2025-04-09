@@ -14,7 +14,12 @@ title: 组件库的一些内容
 
 2. 怎么写的组件
 
-- 高内聚、低耦合
+核心设计原则：
+- 单一职责原则：组件功能要明确，每个组件只负责特定功能，不要耦合
+- 高内聚、低耦合：对外无依赖或者依赖少
+- 可复用性
+- 可配置性：props、children传参实现组合。
+- 隔离性：注意样式隔离
 
 3. 组件怎么测试
 
@@ -26,10 +31,28 @@ title: 组件库的一些内容
   - `pnpm workspace`即可，因为不是很大
   - 其他方案：lerna等
 
+大智慧组件库的管理：pnpm workspace：
+- `pnpm -F <package> add <depsName> --workspace`：在指定package中安装依赖
+- `pnpm add <depsName> --workspace|-w`：在所有package中安装通用依赖
+- 提供了在根目录执行子项目的命令：
+```bash
+pnpm -F <package> exec <command> <args>
+pnpm -F <package> exec npx tsc --init
+pnpm -F <package> exec pnpm run build
+
+# 递归执行命令
+pnpm -r run build
+```
+
 5. 组件库打包用`Rollup`和`Webpack`有什么区别
 
 - `Rollup`体积更小，打包出来的产物没有runtime逻辑代码。webpack的产物有很多的runtime代码，为了能通过依赖图解析文件，产物中添加了一些处理逻辑的代码，所以体积略大一些
 - Rollup更快，rust比js快
+
+大智慧组件库的打包：
+- gulp组织流程，esm以及umd两个格式的产物。
+- es产物：less文件用less来解析、module.less用postcss来解析；js文件用babel来解析；ts文件用gulp-typescript来解析
+- umd产物：webpack来处理，ts文件用ts-loader；less文件用less-loader、css-loader；其他文件用webpack的resource；
 
 6. 组件库从发布到使用
 
