@@ -307,4 +307,44 @@ pinia基于响应式，使用更方便，类似全局状态，也更轻量、更
 
 ## 写题
 
-TODO 
+### 函数式编程-组合compose
+极简实现：
+```js
+function compose(...funcs) {
+  return function(...args) {
+    return funcs.reduce((a, b) => {
+      const result = b(...args)
+      return a(result)
+    })
+  }
+}
+
+const add = (x) => x + 1
+const mul = (x) => x * 2
+const composeFn = compose(mul, add)
+composeFn(3) // (3 + 1) * 2 从右到左执行，先执行add，再将结果给mul
+```
+### curry
+
+实现：
+```js
+
+function curry(fn) {
+  return function curried(...args) {
+    if(args.length >= fn.length) {
+      return fn.apply(this, ...args)
+    }else {
+      return function (...args2) {
+        return curried.apply(this, args.concat(args2)) 
+      } 
+    }
+  }
+}
+
+const add = (x, y, z) =>x + y + z
+const curryFn = curry(add)
+curryFn(1)(2)(3) // 6
+curryFn(1, 2)(3) // 6
+curryFn(1, 2, 3) // 6
+```
+
