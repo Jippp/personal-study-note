@@ -6,6 +6,45 @@ title: 记录一些常见的面试题 后续再整理
 
 # 记录一些常见的面试题 后续再整理
 
+## 基础
+
+### 原型链
+
+js中通过`__proto__`这个隐式属性和一个`prototype`对象实现继承的。
+
+当在一个对象中查找某个属性时，如果自身没有就会沿着`__proto__`原型链往上查找，直到找到或者到原型链的顶端结束：
+`obj.__proto__ => Object.prototype => Object.prototype.__proto__ => null`
+
+需要注意以下几点比较特殊的：
+1. 对象上有`__proto__`属性，指向构造函数的原型对象；还有一个`constructor`属性，指向构造函数。
+2. 函数上有`prototype`属性(箭头函数没有)，指向一个原型对象，该对象是用来给所有实例共享方法和属性的。
+3. `Object.__proto__`指向`Function.prototype`，因为Object对象是由Function构造的
+4. `Function.__proto__`指向`Function.prototype`，Function算是顶级构造函数，所以Function的原型指向其原型对象
+5. `Function.prototype`是一个对象，所以`Function.prototype.__proto__`指向`Object.prototype`
+6. `Object.prototype`算是对象的顶级，所以再往上查原型就是null`Object.prototype.__proto__`
+7. 可以通过`Object.create(null)`创建一个`__proto__`指向null的对象实例
+8. 通过`Object.getPrototype(obj)`访问`__proto__`
+
+### 作用域链
+
+原型链是对象访问属性的，作用域链是访问变量的。
+
+比如读取某个变量时，如果当前作用域内没有声明该变量，就会沿着作用域链去查找，直到全局作用域或者ReferenceError。
+
+js中的作用域是静态作用域，即声明时就已经能确定作用域了。
+
+作用域类型：全局作用域、函数作用域、块级作用域
+
+### 闭包
+
+函数内访问了外部函数作用域中变量，该变量有引用 能访问到，所以不会被GC。
+
+> GC的算法：可访问性算法，从root根节点(很多，通常是作用域 比如块级作用域)开始，能访问到的是活动对象 不会被gc
+
+应用场景：
+- 私有变量
+- 回调中使用
+
 ## react
 
 - react组件生命周期
@@ -324,6 +363,7 @@ const mul = (x) => x * 2
 const composeFn = compose(mul, add)
 composeFn(3) // (3 + 1) * 2 从右到左执行，先执行add，再将结果给mul
 ```
+
 ### curry
 
 实现：
@@ -348,3 +388,64 @@ curryFn(1, 2)(3) // 6
 curryFn(1, 2, 3) // 6
 ```
 
+### 防抖和节流
+
+```js
+function debounce(fn, delay) {
+  let timer
+  return function(...args) {
+    if(timer) clearTimeout(timer)
+
+    const context = this
+    timer = setTimeout(() => {
+      fn.apply(context, ...args)
+    }, delay)
+  }
+}
+
+function throttle(fn, delay) {
+  let timer
+
+  return function(...args) {
+    if(timer) return
+
+    const context = this
+    timer = setTimeout(() => {
+      fn.apply(context, ...args)
+      timer = null
+    }, delay)
+  }
+}
+```
+
+### 两个数组去重
+
+```js
+// 核心：利用json转成字符串去对比，需要对对象的顺序做一个排序处理，保持顺序的一致性
+function merge(arr1, arr2) {
+  const record = new Map()
+  
+  function stringify(target) {
+    if(typeof target !== 'object') return target
+    // 排序  
+    const result = {}
+    Object.keys(target).sort().forEach(key => {
+      result[key] = target[key]
+    })
+    return result
+  }
+
+  arr1.forEach(item => {
+    const target = JSON.stringify(stringify(item))
+    record.set(target, item)
+  })
+  arr2.forEach(item => {
+    const target = JSON.stringify(stringify(item))
+    record.set(target, item)
+  })
+
+  return Array.from(record.values())
+}
+
+console.log(merge([1, { a: 1, b: 2 }], [{ b: 2, a: 1 }])) // [1]
+```
