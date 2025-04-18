@@ -617,3 +617,102 @@ console.log(fn([
   ['黑色', '灰色', '白色'],
 ]))
 ```
+
+### Promise相关
+
+模拟promise相关的代码，重要的是怎么执行这个promise异步任务：
+1. 借助`async\await`来执行
+2. 借助`Promise.resolve()`api来执行，该api可以成功或失败，所以执行一个promise任务很合适。
+
+```js
+/** 有一个err就执行err，否则返回全部成功的 */
+function promiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    if(!promises.length) return resolve([])
+    const result = []
+    let count = promises.length
+
+    for(let i = 0; i < promises.length; i++) {
+      const p = promises[i]
+      Promise.resolve(p).then(res => {
+        result--
+        result[i] = res
+        if(!count) {
+          return resolve(result)
+        }
+      }).catch(reject)
+    }
+  })
+}
+
+/** 全部执行完，成功或失败都有状态 */
+function promiseAllSettled(promises) {
+  return new Promise((resolve, reject) => {
+    if(!promises.length) return resolve([])
+    const result = []
+
+    for(let i = 0; i < promises.length; i++) {
+      Promise.resolve(promises[i]).then((res) => {
+        result[i] = {
+          'status': 'fulfilled',
+          'value': res
+        }
+      }, (err) => {
+        result[i] = {
+          'status': 'rejected',
+          'reason': err
+        }
+      })
+      .finally(() => {
+        if(result.length === promises.length) {
+          return resolve(resolve)
+        }
+      })
+    }
+
+  })
+}
+
+/** 和Promise.all相反，一个成功就成功， 否则返回全部失败的 */
+function promiseAny(promises) {
+  return new Promise((resolve, reject) => {
+    // 空数组也执行失败
+    if(!promises.length) return reject([])
+
+    const result = []
+
+    for(let i = 0; i < promises.length; i++) {
+      Promise.resolve(promises[i])
+        .then(res => {
+          return resolve(res)
+        })
+        .catch(err => {
+          result[i] = err
+        })
+        .finally(() => {
+          if(result.length === promises.length) {
+            return reject(result)
+          }
+        })
+    }
+  })
+}
+
+/** 只要一个成功或失败就立即返回 */
+function promiseRace(promises) {
+  return new Promise((resolve, reject) => {
+    if(!promises.length) return resolve([])
+
+    for(let i = 0; i < promises.length; i++) {
+      Promise.resolve(promises[i])
+        .then(res => {
+          return resolve(res)
+        })
+        .catch(err => {
+          return reject(err)
+        })
+    }
+  })
+}
+```
+
