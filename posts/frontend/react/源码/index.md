@@ -35,3 +35,14 @@ mutation阶段主要是操作dom，首先清掉ref layout再重新赋值，执�
 layout阶段主要是一些善后操作，比如赋值ref、执行effect和layouteffect的create函数
 
 说实话 这b源码是真不懂，只能确定是mutation时执行的destory，再layout重新执行了create。没找到effect和layouteffect的顺序。既然如此，记住layouteffect的destory先执行的；layouteffect的create是同步执行的；
+
+## React事件顺序
+
+React提供了一个`onClick`合成事件，在冒泡时触发；`onClickCapture`合成事件，在捕获时触发。
+
+所以React合成事件和原生DOM事件的触发顺序：
+- 从root到目标元素，依次触发React合成事件中的捕获阶段(onClickCapture)
+- 然后再从root到目标元素，依次触发原生DOM事件的捕获阶段
+- 目标元素
+- 触发原生DOM事件的冒泡
+- 触发React合成事件的冒泡(onClick)
