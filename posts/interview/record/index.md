@@ -165,6 +165,45 @@ function run(n) {
 
 - 大整数相减：边界值没考虑清楚，最后没做出来
 
+```js
+function isSmaller(a, b) {
+  return a.length < b.length || (a.length === b.length && a < b)
+}
+
+function bigIntSubtract(a, b) {
+  const result = []
+  let isNegivate = false
+  if(isSmaller(a, b)) {
+    // 找到较大的值交换位置，保证a始终较大
+    isNegivate = true;
+    [a, b] = [b, a]
+  }
+
+  let i = a.length - 1
+  let j = b.length - 1
+  let temp = 0
+  while(i >= 0 || j >= 0) {
+    let cur = Number(a[i] || 0) - temp - Number(b[j] || 0)
+    if(cur < 0) {
+      cur += 10
+      temp = 1
+    }else {
+      temp = 0
+    }
+    result.unshift(cur)
+    i--
+    j--
+  }
+
+  // 可能有前置0，去掉
+  while(result[0] === 0 && result.length) {
+    result.shift()
+  }
+
+  return `${isNegivate ? '-' : ''}${result.join('')}`
+}
+```
+
 - 后面随便问了几题，http状态码的含义、项目中的技术难点
 
 ### HR面
