@@ -6,7 +6,7 @@ import App from './App';
 registerMicroApps([
   {
     name: 'vue app',
-    entry: 'http://localhost:3000/',
+    entry: 'http://localhost:3002/',
     container: '#vue-app',
     activeRule: '/vueapp',
   },
@@ -25,7 +25,7 @@ start({
 
 // loadMicroApp({
 //   name: 'vue app',
-//   entry: 'http://localhost:3000/',
+//   entry: 'http://localhost:3002/',
 //   container: '#vue-app',
 // });
 
