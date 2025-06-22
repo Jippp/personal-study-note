@@ -1,73 +1,73 @@
 {
-  "hash": "ea22df00",
-  "configHash": "a8937694",
+  "hash": "7ea7bb26",
+  "configHash": "e3f34062",
   "lockfileHash": "01fc3f9a",
-  "browserHash": "2329aa09",
+  "browserHash": "8ecfb815",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/.pnpm/vue@3.5.13/node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "391175c8",
+      "fileHash": "6af30045",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/.pnpm/@vue+devtools-api@7.4.5/node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "4359c39f",
+      "fileHash": "961d3249",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/.pnpm/@vueuse+core@11.1.0_vue@3.5.13/node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "a620e909",
+      "fileHash": "e4132cea",
       "needsInterop": false
     },
     "vitepress > @vueuse/integrations/useFocusTrap": {
       "src": "../../../node_modules/.pnpm/@vueuse+integrations@11.1.0_focus-trap@7.6.0_vue@3.5.13/node_modules/@vueuse/integrations/useFocusTrap.mjs",
       "file": "vitepress___@vueuse_integrations_useFocusTrap.js",
-      "fileHash": "d3195277",
+      "fileHash": "5abe9997",
       "needsInterop": false
     },
     "vitepress > mark.js/src/vanilla.js": {
       "src": "../../../node_modules/.pnpm/mark.js@8.11.1/node_modules/mark.js/src/vanilla.js",
       "file": "vitepress___mark__js_src_vanilla__js.js",
-      "fileHash": "a5fc7e80",
+      "fileHash": "6ee5be77",
       "needsInterop": false
     },
     "vitepress > minisearch": {
       "src": "../../../node_modules/.pnpm/minisearch@7.1.0/node_modules/minisearch/dist/es/index.js",
       "file": "vitepress___minisearch.js",
-      "fileHash": "9b1326ec",
+      "fileHash": "145e41b3",
       "needsInterop": false
     },
     "dayjs": {
       "src": "../../../node_modules/.pnpm/dayjs@1.11.13/node_modules/dayjs/dayjs.min.js",
       "file": "dayjs.js",
-      "fileHash": "d0ad06ed",
+      "fileHash": "27fe6200",
       "needsInterop": true
     },
     "dayjs/plugin/relativeTime": {
       "src": "../../../node_modules/.pnpm/dayjs@1.11.13/node_modules/dayjs/plugin/relativeTime.js",
       "file": "dayjs_plugin_relativeTime.js",
-      "fileHash": "c55760b8",
+      "fileHash": "d36c79cd",
       "needsInterop": true
     },
     "cal-heatmap": {
       "src": "../../../node_modules/.pnpm/cal-heatmap@4.2.4/node_modules/cal-heatmap/dist/cal-heatmap.esm.js",
       "file": "cal-heatmap.js",
-      "fileHash": "9dfc8835",
+      "fileHash": "d36e1c3b",
       "needsInterop": false
     },
     "cal-heatmap/plugins/Tooltip": {
       "src": "../../../node_modules/.pnpm/cal-heatmap@4.2.4/node_modules/cal-heatmap/dist/plugins/Tooltip.esm.js",
       "file": "cal-heatmap_plugins_Tooltip.js",
-      "fileHash": "c2c5a746",
+      "fileHash": "f595a536",
       "needsInterop": false
     },
     "cal-heatmap/plugins/CalendarLabel": {
       "src": "../../../node_modules/.pnpm/cal-heatmap@4.2.4/node_modules/cal-heatmap/dist/plugins/CalendarLabel.esm.js",
       "file": "cal-heatmap_plugins_CalendarLabel.js",
-      "fileHash": "8d0eb1ec",
+      "fileHash": "e45f68d5",
       "needsInterop": false
     }
   },
